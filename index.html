@@ -366,29 +366,57 @@ new ResizeObserver(([entry]) => {
     input.setAttribute('aria-valuetext', text);
   }
 
-  // One orchestrated moment: the first time the figure is in view, the parts come together.
+  // The loop: rest on the scatter, gather into the logo, rest, then scatter to a new random
+  // layout. Every layout ends on the logo, so the next one takes over there without a jump.
+  // Each cell eases in and out on its own path. Dragging the slider holds the loop; it picks
+  // up again a few seconds after the last touch. Off screen it waits.
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let frame = 0;
-  const stop = () => cancelAnimationFrame(frame);
+  const PHASES = { rest0: 1600, gather: 3400, rest1: 2800, scatter: 2600 };
+  const NEXT = { rest0: 'gather', gather: 'rest1', rest1: 'scatter', scatter: 'rest0' };
+  const newPlan = () => makePlan(Math.floor(Math.random() * 4294967296));
+  let phase = 'rest0', since = 0, last = 0, pausedAt = 0, frame = 0;
+  let visible = false, held = false, resumeTimer = 0, next = null;
+  function tick(now) {
+    if (!since) since = now;
+    if (last && now - last > 250) since += now - last;
+    last = now;
+    let p = (now - since) / PHASES[phase];
+    while (p >= 1) {
+      since += PHASES[phase];
+      phase = NEXT[phase];
+      if (phase === 'rest1') next = newPlan();
+      if (phase === 'scatter') plan = next;
+      p = (now - since) / PHASES[phase];
+    }
+    const t = phase === 'rest0' ? 0 : phase === 'gather' ? p : phase === 'rest1' ? 1 : 1 - p;
+    input.value = Math.round(t * 1000);
+    draw();
+    frame = requestAnimationFrame(tick);
+  }
+  const run = () => {
+    if (frame || !visible || held || reduce) return;
+    if (pausedAt && since) since += performance.now() - pausedAt;
+    pausedAt = 0; last = 0;
+    frame = requestAnimationFrame(tick);
+  };
+  const halt = () => { if (frame) { cancelAnimationFrame(frame); frame = 0; pausedAt = performance.now(); } };
+  function resume() {
+    held = false;
+    const t = input.value / 1000, now = performance.now();
+    if (t >= 1) { phase = 'rest1'; since = now; next = newPlan(); }
+    else { phase = 'gather'; since = now - t * PHASES.gather; }
+    pausedAt = 0;
+    run();
+  }
+  const later = () => { clearTimeout(resumeTimer); if (!reduce) resumeTimer = setTimeout(resume, 4000); };
+
   input.value = reduce ? 1000 : 0;
   draw();
-  input.addEventListener('input', () => { stop(); draw(); });
-  input.addEventListener('pointerdown', stop);
+  input.addEventListener('pointerdown', () => { held = true; halt(); });
+  input.addEventListener('pointerup', later);
+  input.addEventListener('input', () => { held = true; halt(); draw(); later(); });
   if (!reduce && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      io.disconnect();
-      const start = performance.now() + 500, D = 2600;
-      const step = (now) => {
-        const t = Math.min(1, Math.max(0, (now - start) / D));
-        const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(2 - 2 * t, 2) / 2;
-        input.value = Math.round(e * 1000);
-        draw();
-        if (t < 1) frame = requestAnimationFrame(step);
-      };
-      frame = requestAnimationFrame(step);
-    }, { threshold: 0.6 });
-    io.observe(svg);
+    new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) run(); else halt(); }, { threshold: 0.3 }).observe(svg);
   }
 })();
 
