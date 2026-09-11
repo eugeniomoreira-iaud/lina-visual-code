@@ -238,7 +238,7 @@
 </main>
 
 <script>
-// G: static header + animated dither field. Reduced motion draws one stable frame.
+// G: static header + animated dither field, tone from Perlin noise. Reduced motion draws one stable frame.
 (function () {
   const hero = document.querySelector('.hero'), nav = document.querySelector('.topnav');
   const lockup = document.querySelector('.lockup'), wordmark = lockup.querySelector('#wordmark');
@@ -253,21 +253,41 @@
 
   const canvas = field.querySelector('canvas'), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+  // Ken Perlin's improved noise (2002), seeded once per load.
+  const mulberry32 = (a) => () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const rnd = mulberry32(Math.floor(Math.random() * 4294967296));
+  const perm = new Uint8Array(512);
+  { const p = Array.from({ length: 256 }, (_, i) => i);
+    for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) perm[i] = p[i & 255]; }
+  const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  const lerp = (t, a, b) => a + t * (b - a);
+  const grad = (hash, x, y, z) => {
+    const h = hash & 15, u = h < 8 ? x : y, v = h < 4 ? y : (h === 12 || h === 14 ? x : z);
+    return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
+  };
+  function noise(x, y, z) {
+    const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+    x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+    const u = fade(x), v = fade(y), w = fade(z);
+    const A = perm[X] + Y, AA = perm[A] + Z, AB = perm[A + 1] + Z, B = perm[X + 1] + Y, BA = perm[B] + Z, BB = perm[B + 1] + Z;
+    return lerp(w, lerp(v, lerp(u, grad(perm[AA], x, y, z), grad(perm[BA], x - 1, y, z)), lerp(u, grad(perm[AB], x, y - 1, z), grad(perm[BB], x - 1, y - 1, z))),
+      lerp(v, lerp(u, grad(perm[AA + 1], x, y, z - 1), grad(perm[BA + 1], x - 1, y, z - 1)), lerp(u, grad(perm[AB + 1], x, y - 1, z - 1), grad(perm[BB + 1], x - 1, y - 1, z - 1))));
+  }
+  function fbm(x, y, z) {
+    return (noise(x, y, z) + noise(x * 2, y * 2, z * 2) * .5 + noise(x * 4, y * 4, z * 4) * .25) / 1.75;
+  }
   function draw(time = 0) {
     const box = field.getBoundingClientRect(), ratio = Math.min(devicePixelRatio || 1, 2);
     const w = Math.max(320, Math.round(box.width)), h = Math.max(260, Math.round(box.height));
     canvas.width = w * ratio; canvas.height = h * ratio;
     const ctx = canvas.getContext('2d'); ctx.scale(ratio, ratio);
-    const cell = w < 600 ? 9 : 11, t = time * .00018;
-    const blob = (x, y, cx, cy, sx, sy) => Math.exp(-(((x - cx) / sx) ** 2 + ((y - cy) / sy) ** 2));
+    const cell = w < 600 ? 9 : 11, t = time * .00015, S = 420; // px per noise unit
     for (let y = 0, row = 0; y < h + cell; y += cell, row++) for (let x = 0, col = 0; x < w + cell; x += cell, col++) {
-      const nx = x / w, ny = y / h;
-      const a = blob(nx, ny, .3 + .16 * Math.sin(t * 1.1), .45 + .18 * Math.cos(t * .8), .25, .32);
-      const b = blob(nx, ny, .72 + .13 * Math.cos(t * .65), .56 + .2 * Math.sin(t * 1.05), .3, .24);
-      const c = blob(nx, ny, .48 + .2 * Math.sin(t * .48 + 2), .2 + .1 * Math.cos(t * .9), .2, .18);
-      const tone = Math.min(1, .06 + a * .8 + b * .74 + c * .5);
+      const n = fbm(x / S, y / S, t);
+      const tone = Math.min(1, Math.max(.06, .45 + n * 1.6));
       if (tone * 16 <= bayer[row % 4][col % 4]) continue;
-      ctx.fillStyle = a + c > b ? '#520000' : '#9B0A0E';
+      ctx.fillStyle = noise(x / (S * 1.7) + 31.7, y / (S * 1.7) - 17.3, t * .7) > 0 ? '#520000' : '#9B0A0E';
       const size = cell * (.26 + tone * .65), inset = (cell - size) / 2;
       ctx.beginPath(); ctx.roundRect(x + inset, y + inset, size, size, size * .23); ctx.fill();
     }
