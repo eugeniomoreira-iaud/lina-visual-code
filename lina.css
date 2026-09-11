@@ -1,6 +1,6 @@
 /* Shared tokens and tool chrome for the LINA pages. */
 
-@font-face { font-family: "Neometric"; font-weight: 400; src: url("font/Neometric-Regular.otf") format("opentype"); }
+@font-face { font-family: "Neometric"; font-weight: 400; src: url("font/Neometric%20Light%20(Regular).otf") format("opentype"); }
 @font-face { font-family: "Neometric"; font-weight: 500; src: url("font/Neometric%20Medium%20(Regular).otf") format("opentype"); }
 @font-face { font-family: "Neometric"; font-weight: 800; src: url("font/Neometric%20Extra%20Bold%20(Bold).otf") format("opentype"); }
 

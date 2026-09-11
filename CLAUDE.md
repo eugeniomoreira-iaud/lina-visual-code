@@ -9,6 +9,7 @@ Tools for drawing with the geometry of the LINA logo (Laboratório de Modelagem 
 - Blocks that **connect** (touch or overlap) keep a whole number of half cells between their origins, so a shape's inside geometry stays on the half-cell grid. Inside a shape, gaps are at least half a cell; the rule closes them into the half-circle arch of the n and the pill counter of the A.
 - Blocks that **do not connect** may be displaced by ¼ cell, so separate shapes can sit **¼ cell apart**, the wordmark's own letter spacing. A ¼-cell gap is legal only between distinct shapes, never inside one.
 - Two declared exceptions, both from the logo: the A's crossbar (half a cell wide, one cell long) and, in the image filter, the **half-cell dot**, which the rule turns into a circle.
+- One declared exception outside the logo: the landing page's animated dither field (the banner under the header in `index.html`) is decoration, not drawn by the rule. Its dots vary in size continuously and round in proportion to their size. It stays confined to that banner; no tool or other page may reuse it.
 - Colours: crimson `#9B0A0E`, oxblood `#520000` (the A), white, black. Font: Neometric (in `font/`, local only: it is licensed, so it is git-ignored and the published site falls back to the system sans).
 
 If a change would produce a solid thinner than a cell (outside the exceptions), a ¼-cell offset between connected blocks, or a gap thinner than ¼ cell, it breaks the system. Don't ship it; say so.

@@ -10,189 +10,119 @@
   /* Two vertical lines come from the logo: panels start at the L's stem (the wrap edge),
      text starts at the L's foot (--foot, measured from the lockup by the script). */
   :root { --foot: 0px; }
-  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: clamp(20px, 5vw, 56px); }
+  .wrap { padding-inline: clamp(20px, 4vw, 64px); }
   .foot { padding-left: var(--foot); }
+  body { overflow-x: hidden; }
 
-  .topnav { display: flex; justify-content: flex-end; gap: 28px; padding-block: 22px 0; font-size: 15px; font-weight: 500; }
-  .topnav a { text-decoration: none; padding-block: 4px; }
+  .topnav { display: flex; justify-content: flex-end; gap: 22px; padding: 0; font-size: 12px; font-weight: 500; }
+  .topnav a { text-decoration: none; padding: 8px 0; }
   .topnav a:hover { color: var(--crimson); text-decoration: underline; text-underline-offset: 5px; }
 
-  /* The lockup mirrors the logo: the name starts where the L's foot starts. */
-  .hero {
-    padding-block: clamp(24px, 6vh, 72px) clamp(40px, 8vh, 80px);
-    display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 48px; align-items: end;
-  }
-  .lockup { max-width: 700px; }
-  .lockup svg { display: block; width: 100%; height: auto; }
-  .lockup .name, .lockup .tagline { padding-left: calc(100% * 2 / 17.5); margin: 0; }
-  .lockup .name {
-    margin-top: .8em; font-size: clamp(20px, 3.1vw, 40px); font-weight: 800;
-    line-height: 1.04; letter-spacing: -.012em; color: var(--crimson);
-  }
-  .lockup .tagline { margin-top: .9em; font-size: clamp(12px, 1.4vw, 18px); letter-spacing: .24em; color: var(--oxblood); }
-  .intro { margin: 0; font-size: 17px; line-height: 1.55; max-width: 34ch; }
+  .hero { min-height: 100svh; padding: 0 clamp(20px, 4vw, 64px) clamp(20px, 3vw, 42px); display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 0; align-items: stretch; }
+  .header-bar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 28px; padding: 20px 0; }
+  .brand-header { display: flex; align-items: center; gap: 20px; min-width: 0; }
+  .brand-header #wordmark { display: block; width: 126px; height: auto; flex: none; }
+  .identity-meta .name { margin: 0; font-size: 11px; line-height: 1.18; font-weight: 500; }
+  .identity-meta .tagline { margin: 5px 0 0; font-size: 9px; letter-spacing: .13em; }
+  .dither-field { grid-column: 1; grid-row: 2; min-height: 0; position: relative; overflow: hidden; margin: 0 calc(-1 * clamp(20px, 4vw, 64px)); }
+  .dither-field canvas { display: block; width: 100%; height: 100%; position: absolute; inset: 0; }
 
   /* The concept: definition and notation, then the figure and its reading. */
-  .concept { padding-block: clamp(24px, 5vh, 56px) clamp(64px, 11vh, 120px); }
+  .concept { padding-block: 0 clamp(64px, 9vw, 120px); background: var(--paper); }
   .concept h2 {
-    margin: 0; max-width: 22ch; text-wrap: balance; font-size: clamp(32px, 4.6vw, 58px); font-weight: 800;
-    line-height: 1.02; letter-spacing: -.022em; color: var(--crimson);
+    margin: 0; text-wrap: balance; padding-bottom: 30px; border-bottom: 1px solid var(--oxblood);
+    font-size: clamp(30px, 4vw, 52px); font-weight: 500; line-height: 1.02; letter-spacing: -.022em;
   }
   .concept-opening {
-    display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    gap: 28px clamp(32px, 5vw, 64px); margin-top: 32px; align-items: start;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px; align-items: stretch;
+    padding-left: 0;
   }
-  .concept-opening p { margin: 0; font-size: clamp(17px, 1.4vw, 18px); line-height: 1.65; }
+  .concept-opening > * { padding: 34px; background: var(--paper); }
+  .concept-opening p { margin: 0; font-size: 16px; line-height: 1.62; }
   .concept-opening .lead { max-width: 62ch; }
-  .system-formula { margin: 28px 0 0; font-size: clamp(26px, 2.7vw, 36px); color: var(--oxblood); }
-  .emerge { margin: clamp(36px, 6vh, 56px) 0 0; padding: clamp(18px, 3vw, 40px); background: var(--blush); border-radius: 22px; }
+  .system-formula { margin: 28px 0 0; font-size: clamp(26px, 2.7vw, 36px); }
+  .emerge { margin: 0; padding: clamp(28px, 5vw, 70px); background: var(--oxblood); color: #F3B6B0; }
   .emerge svg { display: block; width: 100%; height: auto; overflow: visible; }
   .emerge-controls {
     display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
     margin-top: clamp(16px, 2.4vw, 28px); font-size: 14px; font-weight: 500;
   }
   .emerge-controls input { width: 100%; }
-  .emerge-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  .emerge-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; margin-top: 10px; font-size: 13.5px; }
   .emerge-foot figcaption { margin: 0; max-width: none; font-size: inherit; }
   .emerge-foot output { font-variant-numeric: tabular-nums; min-width: 0; text-align: left; font-size: inherit; }
-  .reading { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 48px; margin-top: clamp(32px, 5vh, 48px); }
-  .reading p { margin: 0; max-width: 48ch; font-size: clamp(17px, 1.4vw, 18px); line-height: 1.65; }
-  .concept-reference { margin-top: 32px; }
+  .reading { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding-left: 0; }
+  .reading p { margin: 0; padding: 34px; background: var(--paper); font-size: 14px; line-height: 1.55; }
+  .concept-reference { padding-top: 22px; }
   .concept-reference p { margin: 0; max-width: 90ch; font-size: 13px; line-height: 1.6; color: var(--muted); }
   .concept-reference a { text-underline-offset: 3px; overflow-wrap: anywhere; }
 
   .section-title { margin: 0 0 24px; font-size: 26px; font-weight: 800; color: var(--crimson); letter-spacing: -.01em; }
-  .tools-intro { margin-bottom: 32px; }
+  .tools-intro { display: grid; grid-template-columns: 1fr 2fr; gap: 32px; margin-bottom: 42px; }
   .tools-intro .section-title { margin-bottom: 16px; }
-  .tools-intro p { margin: 0; max-width: 68ch; font-size: clamp(17px, 1.4vw, 18px); line-height: 1.65; }
+  .tools-intro p { margin: 0; max-width: 62ch; font-size: 16px; line-height: 1.62; }
 
   /* The tools: an asymmetric trio, one door per tool. */
-  .doors {
-    display: grid; gap: 16px;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    grid-template-areas: "editor images" "textures images";
-  }
-  .door { border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
-  .door.editor { grid-area: editor; background: var(--blush); flex-direction: row; }
-  .door.textures { grid-area: textures; background: var(--crimson); color: var(--paper); flex-direction: row; }
+  .doors { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "editor textures images"; }
+  .door { overflow: hidden; display: flex; flex-direction: column; }
+  .door.editor { grid-area: editor; background: var(--blush); }
+  .door.textures { grid-area: textures; background: var(--crimson); color: var(--paper); }
   .door.images { grid-area: images; background: #F1EDE6; }
-  .door.images h3 { color: var(--oxblood); }
-  .images .go { background: var(--oxblood); color: var(--paper); }
-  .images .go:hover { background: var(--crimson); }
+  .door .preview { flex: none; min-height: 0; aspect-ratio: 4 / 3; }
   .preview { display: block; width: 100%; }
   .preview svg { display: block; width: 100%; height: 100%; }
-  .editor .preview, .textures .preview { flex: 0 0 48%; min-height: 250px; }
-  .images .preview { flex: 1 1 auto; min-height: 300px; }
   button.preview { border: 0; padding: 0; margin: 0; background: none; cursor: pointer; }
-  .door .body { padding: 26px 28px 30px; display: grid; gap: 10px; align-content: start; }
-  .door h3 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
-  .door.editor h3 { color: var(--crimson); }
-  .door p { margin: 0; max-width: 46ch; font-size: 15px; }
+  .door .body { padding: 20px 18px 26px; display: grid; gap: 9px; align-content: start; }
+  .door h3 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -.01em; line-height: 1.1; }
+  .door p { margin: 0; max-width: 46ch; font-size: 13px; line-height: 1.5; }
   .door .go {
-    justify-self: start; margin-top: 10px; text-decoration: none; font-weight: 500; font-size: 15px;
-    padding: 11px 18px; border-radius: 10px; white-space: nowrap;
+    justify-self: start; margin: 5px 0 0; text-decoration: none; font-weight: 500; font-size: 12px;
+    padding: 0 0 3px; white-space: nowrap; border-bottom: 1px solid currentColor;
   }
-  .editor .go { background: var(--crimson); color: var(--paper); }
-  .editor .go:hover { background: var(--oxblood); }
-  .textures .go { background: var(--paper); color: var(--crimson); }
-  .textures .go:hover { background: var(--blush); }
   .textures .go:focus-visible, .textures .preview:focus-visible { outline-color: var(--paper); }
   .door .small { font-size: 13px; opacity: .8; }
 
   /* The rule, drawn by the same code the tools use. */
-  .rules { padding-block: clamp(56px, 10vh, 104px); }
-  .rules .section-title { margin-bottom: 10px; }
-  .rules > p { margin: 0 0 34px; max-width: 58ch; font-size: 15px; color: var(--muted); }
-  .rule-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
+  .rules { padding-block: clamp(64px, 9vw, 120px); background: #171717; color: var(--paper); }
+  .rules .section-title { margin-bottom: 10px; color: inherit; }
+  .rules > p { margin: 0 0 34px; max-width: 58ch; font-size: 14px; opacity: .72; }
+  .rule-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
   figure { margin: 0; }
-  .rule-grid svg { display: block; width: 100%; aspect-ratio: 1; background: var(--blush); border-radius: 16px; }
+  .rule-grid figure { padding: 18px; background: var(--blush); color: var(--oxblood); }
+  .rule-grid svg { display: block; width: 100%; aspect-ratio: 1; background: var(--blush); }
   figcaption { margin-top: 14px; font-size: 14.5px; max-width: 30ch; }
   .minor { stroke: var(--rule); }
   .major { stroke: var(--rule-strong); }
   .cellline { fill: none; stroke: var(--oxblood); stroke-opacity: .55; stroke-dasharray: 3 3; }
 
   @media (max-width: 900px) {
-    .hero { grid-template-columns: 1fr; gap: 28px; }
-    .concept-opening, .reading { grid-template-columns: 1fr; }
-    .concept-opening p, .reading p { max-width: 65ch; }
+    .header-bar { gap: 8px 16px; padding: 14px 0; }
+    .brand-header { gap: 12px; }
+    .brand-header #wordmark { width: 94px; }
+    .identity-meta { display: none; }
+    .concept-opening, .reading { grid-template-columns: 1fr; background: var(--oxblood); }
+    .concept-opening p { max-width: 65ch; }
+    .concept-opening > * { padding: 24px 0; }
+    .reading p { padding: 24px 0; }
     .system-definition { max-width: 65ch; }
+    .tools-intro { grid-template-columns: 1fr; }
     .doors { grid-template-columns: 1fr; grid-template-areas: "editor" "textures" "images"; }
-    .door.editor, .door.textures { flex-direction: column; }
-    .editor .preview, .textures .preview, .images .preview { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
     .rule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 600px) {
     .foot { padding-left: 0; }
-    .topnav { justify-content: flex-start; }
     .emerge-controls { grid-template-columns: 1fr 1fr; }
     .emerge-controls input { grid-column: 1 / -1; grid-row: 1; }
     .emerge-controls span:last-of-type { text-align: right; }
   }
-  /* G: static identity header + full first-viewport field. */
-  body[data-concept="g"] { background: #F3B6B0; color: var(--oxblood); overflow-x: hidden; }
-  body[data-concept="g"] .wrap { max-width: none; padding-inline: clamp(20px, 4vw, 64px); }
-  body[data-concept="g"] .topnav { display: flex; justify-content: flex-end; gap: 22px; padding: 0; font-size: 12px; font-weight: 500; }
-  body[data-concept="g"] .topnav a { padding: 8px 0; text-decoration: none; }
-  body[data-concept="g"] .hero { min-height: 100svh; padding: 0 clamp(20px, 4vw, 64px) clamp(20px, 3vw, 42px); display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 0; }
-  body[data-concept="g"] .header-bar { position: static; display: grid; grid-template-columns: minmax(320px, 1.1fr) minmax(250px, .8fr) auto; align-items: center; gap: 28px; padding: 20px 0; }
-  body[data-concept="g"] .brand-header { display: flex; align-items: center; gap: 20px; min-width: 0; }
-  body[data-concept="g"] .brand-header #wordmark { display: block; width: 126px; height: auto; flex: none; }
-  body[data-concept="g"] .identity-meta .name { margin: 0; padding: 0; font-size: 11px; line-height: 1.18; font-weight: 500; }
-  body[data-concept="g"] .identity-meta .tagline { margin: 5px 0 0; padding: 0; font-size: 9px; letter-spacing: .13em; }
-  body[data-concept="g"] .header-intro { margin: 0; max-width: 39ch; font-size: 12px; line-height: 1.4; }
-  body[data-concept="g"] .dither-field { grid-column: 1; grid-row: 2; min-height: 0; height: auto; position: relative; overflow: hidden; margin: 0; border: 1px solid var(--oxblood); }
-  body[data-concept="g"] .dither-field canvas { display: block; width: 100%; height: 100%; }
-  body[data-concept="g"] .dither-field figcaption { position: absolute; left: 16px; bottom: 12px; margin: 0; color: var(--oxblood); font-size: 10px; line-height: 1; letter-spacing: .14em; text-transform: uppercase; }
-  body[data-concept="g"] .concept { padding-block: 0 clamp(64px, 9vw, 120px); background: #F3B6B0; }
-  body[data-concept="g"] .concept .section-label { margin: 0; padding: 22px 0 16px; border-top: 1px solid var(--oxblood); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
-  body[data-concept="g"] .concept h2 { max-width: none; margin: 0; padding-bottom: 30px; border-bottom: 1px solid var(--oxblood); color: inherit; font-size: clamp(30px, 4vw, 52px); font-weight: 500; line-height: 1.02; }
-  body[data-concept="g"] .concept .system-formula { display: block; margin: 0; padding: 34px 0; border-bottom: 1px solid var(--oxblood); color: inherit; font-size: clamp(29px, 4vw, 54px); }
-  body[data-concept="g"] .concept-opening { grid-template-columns: 1fr 1fr; gap: 1px; margin-top: 0; background: var(--oxblood); }
-  body[data-concept="g"] .concept-opening > * { padding: 34px; background: #F3B6B0; }
-  body[data-concept="g"] .concept-opening p { margin: 0; font-size: 16px; line-height: 1.62; }
-  body[data-concept="g"] .system-definition .system-formula { display: none; }
-  body[data-concept="g"] .emerge { margin: 0; padding: clamp(28px, 5vw, 70px); border-radius: 0; color: #F3B6B0; background: var(--oxblood); }
-  body[data-concept="g"] .reading { grid-template-columns: 1fr 1fr; gap: 1px; margin: 0; background: var(--oxblood); }
-  body[data-concept="g"] .reading p { margin: 0; padding: 34px; background: #F3B6B0; font-size: 14px; line-height: 1.55; }
-  body[data-concept="g"] .concept-reference { margin: 0; padding-top: 22px; }
-  body[data-concept="g"] .tools-section { padding-block: clamp(60px, 8vw, 112px); background: var(--paper); color: var(--oxblood); }
-  body[data-concept="g"] .tools-intro { display: grid; grid-template-columns: 1fr 2fr; gap: 32px; margin-bottom: 42px; }
-  body[data-concept="g"] .tools-intro p { margin: 0; max-width: 62ch; font-size: 16px; line-height: 1.62; }
-  body[data-concept="g"] .doors { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "editor textures images"; gap: 12px; }
-  body[data-concept="g"] .door, body[data-concept="g"] .door.editor, body[data-concept="g"] .door.textures, body[data-concept="g"] .door.images { display: flex; flex-direction: column; border-radius: 0; color: inherit; }
-  body[data-concept="g"] .door .preview, body[data-concept="g"] .editor .preview, body[data-concept="g"] .textures .preview, body[data-concept="g"] .images .preview { flex: none; min-height: 0; aspect-ratio: 4 / 3; }
-  body[data-concept="g"] .door .body { padding: 20px 18px 26px; gap: 9px; }
-  body[data-concept="g"] .door h3 { color: inherit; font-size: 18px; font-weight: 500; }
-  body[data-concept="g"] .door p { font-size: 13px; line-height: 1.5; }
-  body[data-concept="g"] .door .go { margin: 5px 0 0; padding: 0 0 3px; border-radius: 0; background: transparent; color: inherit; font-size: 12px; border-bottom: 1px solid currentColor; }
-  body[data-concept="g"] .rules { padding-block: clamp(64px, 9vw, 120px); background: #171717; color: var(--paper); }
-  body[data-concept="g"] .rules > p { color: inherit; opacity: .72; font-size: 14px; }
-  body[data-concept="g"] .rule-grid { gap: 1px; background: var(--paper); }
-  body[data-concept="g"] .rule-grid figure { padding: 18px; background: var(--blush); color: var(--oxblood); }
-  body[data-concept="g"] .rule-grid svg { border-radius: 0; }
-  @media (max-width: 900px) {
-    body[data-concept="g"] .header-bar { grid-template-columns: 1fr auto; gap: 8px 16px; padding: 14px 0; }
-    body[data-concept="g"] .brand-header { gap: 12px; }
-    body[data-concept="g"] .brand-header #wordmark { width: 94px; }
-    body[data-concept="g"] .identity-meta .name { display: none; }
-    body[data-concept="g"] .header-intro { grid-column: 1 / -1; grid-row: 2; max-width: 45ch; font-size: 11px; }
-    body[data-concept="g"] .topnav { grid-column: 2; grid-row: 1; }
-    body[data-concept="g"] .concept-opening, body[data-concept="g"] .reading { grid-template-columns: 1fr; }
-    body[data-concept="g"] .concept-opening > * { padding: 24px 0; }
-    body[data-concept="g"] .reading p { padding: 24px 0; }
-    body[data-concept="g"] .tools-intro { grid-template-columns: 1fr; }
-    body[data-concept="g"] .doors { grid-template-columns: 1fr; grid-template-areas: "editor" "textures" "images"; }
-    body[data-concept="g"] .door { border-right: 0; }
-    body[data-concept="g"] .rule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
   @media (max-width: 560px) {
-    body[data-concept="g"] .brand-header #wordmark { width: 82px; }
-    body[data-concept="g"] .topnav { gap: 13px; font-size: 11px; }
-    body[data-concept="g"] .rule-grid { grid-template-columns: 1fr; }
+    .brand-header #wordmark { width: 82px; }
+    .topnav { gap: 13px; font-size: 11px; }
+    .rule-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
-<body data-concept="g">
+<body>
 
 <nav class="wrap topnav" aria-label="Ferramentas">
   <a href="grid.html">Células</a>
@@ -206,7 +136,6 @@
     <p class="name">Laboratório de Modelagem<br>da Informação</p>
     <p class="tagline">Arte · Arquitetura · Ambiente</p>
   </div>
-  <p class="intro">Três ferramentas para desenhar com a célula do logotipo. Tudo o que elas produzem segue a mesma regra.</p>
 </header>
 
 <main>
@@ -316,11 +245,10 @@
   const identity = document.createElement('div'); identity.className = 'identity-meta';
   identity.append(lockup.querySelector('.name'), lockup.querySelector('.tagline'));
   const brand = document.createElement('div'); brand.className = 'brand-header'; brand.append(wordmark, identity);
-  const intro = document.querySelector('.intro'); intro.className = 'header-intro';
-  const header = document.createElement('div'); header.className = 'header-bar'; header.append(brand, intro, nav);
+  const header = document.createElement('div'); header.className = 'header-bar'; header.append(brand, nav);
   const field = document.createElement('figure'); field.className = 'dither-field';
   field.setAttribute('aria-label', 'Campos cromáticos em retícula que mudam lentamente de forma');
-  field.innerHTML = '<canvas aria-hidden="true"></canvas><figcaption>célula / campo / relação / forma</figcaption>';
+  field.innerHTML = '<canvas aria-hidden="true"></canvas>';
   lockup.remove(); hero.prepend(header); hero.append(field);
 
   const canvas = field.querySelector('canvas'), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -330,9 +258,6 @@
     const w = Math.max(320, Math.round(box.width)), h = Math.max(260, Math.round(box.height));
     canvas.width = w * ratio; canvas.height = h * ratio;
     const ctx = canvas.getContext('2d'); ctx.scale(ratio, ratio);
-    const wash = ctx.createLinearGradient(0, 0, w, h);
-    wash.addColorStop(0, '#F7D9D4'); wash.addColorStop(.5, '#F3B6B0'); wash.addColorStop(1, '#CF7773');
-    ctx.fillStyle = wash; ctx.fillRect(0, 0, w, h);
     const cell = w < 600 ? 9 : 11, t = time * .00018;
     const blob = (x, y, cx, cy, sx, sy) => Math.exp(-(((x - cx) / sx) ** 2 + ((y - cy) / sy) ** 2));
     for (let y = 0, row = 0; y < h + cell; y += cell, row++) for (let x = 0, col = 0; x < w + cell; x += cell, col++) {
