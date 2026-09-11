@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINA visual code</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="lina.css">
+<style>
+  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: clamp(20px, 5vw, 56px); }
+
+  /* The lockup mirrors the logo: the name starts where the L's foot starts. */
+  .hero {
+    padding-block: clamp(44px, 10vh, 112px) clamp(40px, 8vh, 80px);
+    display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 48px; align-items: end;
+  }
+  .lockup { max-width: 700px; }
+  .lockup svg { display: block; width: 100%; height: auto; }
+  .lockup .name, .lockup .tagline { padding-left: calc(100% * 2 / 17.5); margin: 0; }
+  .lockup .name {
+    margin-top: .8em; font-size: clamp(20px, 3.1vw, 40px); font-weight: 800;
+    line-height: 1.04; letter-spacing: -.012em; color: var(--crimson);
+  }
+  .lockup .tagline { margin-top: .9em; font-size: clamp(12px, 1.4vw, 18px); letter-spacing: .24em; color: var(--oxblood); }
+  .intro { margin: 0; font-size: 17px; line-height: 1.55; max-width: 36ch; }
+
+  /* One door per tool. */
+  .doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .door { border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
+  .door.editor { background: var(--blush); }
+  .door.textures { background: var(--crimson); color: var(--paper); }
+  .door.images { background: #F1EDE6; }
+  .door.images h2 { color: var(--oxblood); }
+  .images .go { background: var(--oxblood); color: var(--paper); }
+  .images .go:hover { background: var(--crimson); }
+  .preview { display: block; width: 100%; aspect-ratio: 16 / 10; }
+  .preview svg { display: block; width: 100%; height: 100%; }
+  button.preview { border: 0; padding: 0; margin: 0; background: none; cursor: pointer; }
+  .door .body { padding: 26px 28px 30px; display: grid; gap: 10px; align-content: start; }
+  .door h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
+  .door.editor h2 { color: var(--crimson); }
+  .door p { margin: 0; max-width: 46ch; font-size: 15px; }
+  .door .go {
+    justify-self: start; margin-top: 10px; text-decoration: none; font-weight: 500; font-size: 15px;
+    padding: 11px 18px; border-radius: 10px;
+  }
+  .editor .go { background: var(--crimson); color: var(--paper); }
+  .editor .go:hover { background: var(--oxblood); }
+  .textures .go { background: var(--paper); color: var(--crimson); }
+  .textures .go:hover { background: var(--blush); }
+  .textures .go:focus-visible { outline-color: var(--paper); }
+  .door .small { font-size: 13px; opacity: .8; }
+
+  /* The rule, drawn by the same code the tools use. */
+  .rules { padding-block: clamp(56px, 10vh, 104px); }
+  .rules h2 { margin: 0 0 10px; font-size: 26px; font-weight: 800; color: var(--crimson); letter-spacing: -.01em; }
+  .rules > p { margin: 0 0 34px; max-width: 58ch; font-size: 15px; color: var(--muted); }
+  .rule-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
+  figure { margin: 0; }
+  figure svg { display: block; width: 100%; aspect-ratio: 1; background: var(--blush); border-radius: 16px; }
+  figcaption { margin-top: 14px; font-size: 14.5px; max-width: 30ch; }
+  .minor { stroke: var(--rule); }
+  .major { stroke: var(--rule-strong); }
+  .cellline { fill: none; stroke: var(--oxblood); stroke-opacity: .55; stroke-dasharray: 3 3; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 28px; }
+    .doors { grid-template-columns: 1fr; }
+    .rule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap hero">
+  <div class="lockup">
+    <svg id="wordmark" viewBox="0 0 17.5 6" role="img" aria-label="LINA"></svg>
+    <p class="name">Laboratório de Modelagem<br>da Informação</p>
+    <p class="tagline">Arte · Arquitetura · Ambiente</p>
+  </div>
+  <p class="intro">Three tools for drawing with the cell that builds the LINA logo. Whatever you make follows the logo's own corner rule, so it always belongs to the family.</p>
+</header>
+
+<main class="wrap">
+  <section class="doors" aria-label="Tools">
+    <article class="door editor">
+      <div class="preview"><svg id="editorPreview" viewBox="0 0 32 20" aria-hidden="true"></svg></div>
+      <div class="body">
+        <h2>Cell editor</h2>
+        <p>Place and drag cells on a grid to draw letters, marks and icons. Every change redraws the outline, and you can export it as a clean SVG.</p>
+        <a class="go" href="grid.html">Open the editor</a>
+      </div>
+    </article>
+
+    <article class="door textures">
+      <button class="preview" id="texturePreview" type="button" aria-label="Show another texture"></button>
+      <div class="body">
+        <h2>Texture generator</h2>
+        <p>Seeded random patterns built from the same cells. Choose the pattern, the seed and how much blank space it leaves, then export SVG or PNG.</p>
+        <a class="go" href="texture.html">Open the generator</a>
+        <span class="small">Click the pattern to see another.</span>
+      </div>
+    </article>
+
+    <article class="door images">
+      <div class="preview"><svg id="imagePreview" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
+      <div class="body">
+        <h2>Image filter</h2>
+        <p>Turn a photo into a halftone of LINA dots, stems or cells, with the original beside it. Your image never leaves your computer.</p>
+        <a class="go" href="image.html">Open the filter</a>
+      </div>
+    </article>
+  </section>
+
+  <section class="rules">
+    <h2>The rule</h2>
+    <p>Every shape here is a union of square cells. Its outline is then rounded by one rule, with a radius of a quarter cell, and nothing else. The image filter adds one exception, the half-cell dot, which the same rule turns into a circle.</p>
+    <div class="rule-grid">
+      <figure>
+        <svg id="ruleSteps" aria-hidden="true"></svg>
+        <figcaption>Cells snap to a half-cell grid, so they can overlap by half and form steps.</figcaption>
+      </figure>
+      <figure>
+        <svg id="ruleFree" aria-hidden="true"></svg>
+        <figcaption>Free corners round outward.</figcaption>
+      </figure>
+      <figure>
+        <svg id="ruleTouch" aria-hidden="true"></svg>
+        <figcaption>Corners that meet a neighbour round inward, even when two cells only touch diagonally.</figcaption>
+      </figure>
+      <figure>
+        <svg id="ruleArch" aria-hidden="true"></svg>
+        <figcaption>A gap half a cell wide closes into a perfect semicircle, like the arch of the n.</figcaption>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<script src="lina-geometry.js"></script>
+<script src="lina-texture.js"></script>
+<script src="lina-image.js"></script>
+<script src="lina-sample.js"></script>
+<script>
+const { outlinePath, wordmark, blocksToBitmap, LETTERS } = LinaGeometry;
+const CRIMSON = '#9B0A0E', OXBLOOD = '#520000';
+
+// Wordmark with the logo's true ¼-cell spacing; the A in oxblood.
+document.getElementById('wordmark').innerHTML = wordmark(0.5)
+  .map(({ letter, d }) => `<path fill="${letter === 'A' ? OXBLOOD : CRIMSON}" d="${d}"/>`).join('');
+
+function gridLines(w, h) {
+  let s = '';
+  for (let x = 1; x < w; x++) s += `<line class="${x % 2 ? 'minor' : 'major'}" x1="${x}" y1="0" x2="${x}" y2="${h}" vector-effect="non-scaling-stroke"/>`;
+  for (let y = 1; y < h; y++) s += `<line class="${y % 2 ? 'minor' : 'major'}" x1="0" y1="${y}" x2="${w}" y2="${y}" vector-effect="non-scaling-stroke"/>`;
+  return s;
+}
+
+// Editor door: the wordmark as cells on the grid, plus one cell being placed.
+(function () {
+  const blocks = [['L', 0], ['I', 5], ['n', 8], ['A', 14]]
+    .flatMap(([k, dx]) => LETTERS[k].blocks.map(([x, y, s]) => ({ x: x + dx + 6, y: y + 7, s })));
+  document.getElementById('editorPreview').innerHTML =
+    gridLines(32, 20) +
+    `<path fill="${CRIMSON}" fill-rule="evenodd" d="${outlinePath(blocks, 0.5)}"/>` +
+    `<rect x="27" y="7" width="2" height="2" fill="rgba(155,10,14,.16)"/>`;
+})();
+
+// Rule diagrams: grid, the rounded union, and the cells that made it.
+function diagram(id, blocks) {
+  const list = blocks.map(([x, y, s]) => ({ x, y, s }));
+  const { w, h } = blocksToBitmap(list);
+  const S = Math.max(w, h) + 4;
+  const ox = Math.floor((S - w) / 2), oy = Math.floor((S - h) / 2);
+  const svg = document.getElementById(id);
+  svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+  svg.innerHTML = gridLines(S, S) +
+    `<path fill="${CRIMSON}" fill-rule="evenodd" d="${outlinePath(list, 0.5, 1, ox, oy)}"/>` +
+    list.map((b) => `<rect class="cellline" x="${b.x + ox}" y="${b.y + oy}" width="${b.s}" height="${b.s}" vector-effect="non-scaling-stroke"/>`).join('');
+}
+diagram('ruleSteps', [[0, 0, 2], [1, 2, 2], [2, 4, 2]]);
+diagram('ruleFree', [[0, 0, 2]]);
+diagram('ruleTouch', [[0, 0, 2], [2, 2, 2]]);
+diagram('ruleArch', [[0, 0, 2], [2, 0, 2], [3, 0, 2], [0, 2, 2], [3, 2, 2]]);
+
+// Texture door: a live texture from a few tuned starting points.
+const PRESETS = [
+  { mode: 'stems', blank: 0.46, steps: 0.55, gutter: 0.35 },
+  { mode: 'field', blank: 0.5, steps: 0.6, grain: 3.5 },
+  { mode: 'scatter', blank: 0.58, steps: 0.35, clump: 0.9 },
+  { mode: 'glyphs', blank: 0.5, gap: 1, glyphSize: 1, rotate: true },
+];
+let presetIndex = Math.floor(Math.random() * PRESETS.length);
+function showTexture() {
+  const preset = PRESETS[presetIndex % PRESETS.length];
+  const res = LinaTexture.generate({
+    ...preset, seed: Math.floor(Math.random() * 1000000),
+    cols: 32, rows: 20, edges: 'bleed', accent: 0.14,
+  });
+  document.getElementById('texturePreview').innerHTML = LinaTexture.toSVG(res, { bg: CRIMSON, fg: OXBLOOD, accent: '#FFFFFF' });
+  const svg = document.querySelector('#texturePreview svg');
+  svg.removeAttribute('width'); svg.removeAttribute('height');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+}
+document.getElementById('texturePreview').addEventListener('click', () => { presetIndex++; showTexture(); });
+showTexture();
+
+// Image door: the sample portrait through the halftone filter.
+(function () {
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0);
+    const src = LinaImage.prepare(g.getImageData(0, 0, c.width, c.height));
+    const res = LinaImage.process(src, { mode: 'halftone', detail: 60, screen: 3, halfDots: true, dither: 'diffusion' });
+    const svg = document.getElementById('imagePreview');
+    svg.setAttribute('viewBox', `0 0 ${res.U} ${res.V}`);
+    svg.innerHTML = `<rect width="${res.U}" height="${res.V}" fill="#F1EDE6"/>` +
+      `<path fill="${OXBLOOD}" fill-rule="evenodd" d="${LinaGeometry.traceBitmap(res.bits, res.U, res.V, 0.5)}"/>`;
+  };
+  img.src = window.LINA_SAMPLE;
+})();
+</script>
+</body>
+</html>

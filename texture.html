@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINA textures</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="lina.css">
+<style>
+  .stage { background: var(--stage); padding: 32px; }
+  #view { flex: 1; width: 100%; height: 100%; display: block; filter: drop-shadow(0 1px 3px rgba(82, 0, 0, .18)); }
+
+  .seed-row { display: flex; gap: 6px; }
+  .seed-row .field-input { flex: 1; width: auto; min-width: 0; }
+  .seed-row .btn { padding-inline: 12px; }
+
+  .palettes button { position: relative; background: var(--bg); overflow: hidden; }
+  .palettes button::before, .palettes button::after { content: ""; position: absolute; border-radius: 3px; }
+  .palettes button::before { left: 5px; top: 5px; width: 9px; height: 16px; background: var(--fg); }
+  .palettes button::after { right: 5px; bottom: 5px; width: 9px; height: 9px; background: var(--ac); }
+
+  [data-mode][hidden], [data-mode-not][hidden] { display: none; }
+  .mix { width: 14px; font-weight: 800; color: var(--crimson); }
+  .range-row + .range-row { margin-top: 6px; }
+</style>
+</head>
+<body class="tool">
+
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <svg id="mark" viewBox="0 0 4 6" aria-hidden="true"></svg>
+    <div><strong>LINA</strong><span>Visual code</span></div>
+  </a>
+  <nav class="tools" aria-label="Tools">
+    <a href="grid.html">Cells</a>
+    <a href="texture.html" aria-current="page">Textures</a>
+    <a href="image.html">Images</a>
+  </nav>
+
+  <fieldset>
+    <legend>Pattern</legend>
+    <div class="seg grid2" data-key="mode">
+      <button type="button" data-value="scatter">Scatter</button>
+      <button type="button" data-value="field">Field</button>
+      <button type="button" data-value="stems">Stems</button>
+      <button type="button" data-value="glyphs">Glyphs</button>
+    </div>
+    <p class="hint" id="modeHint"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="seed">Seed</label></legend>
+    <div class="seed-row">
+      <input class="field-input" id="seed" type="number" min="0" max="999999" step="1">
+      <button class="btn" id="reseed" type="button">New seed</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="blank">Blank space</label></legend>
+    <div class="range-row">
+      <input id="blank" data-num="blank" type="range" min="5" max="95" step="1">
+      <output id="blankOut"></output>
+    </div>
+    <p class="hint" id="blankActual"></p>
+  </fieldset>
+
+  <div data-mode-not="glyphs">
+  <fieldset>
+    <legend><label for="steps">Half steps</label></legend>
+    <div class="range-row">
+      <input id="steps" data-num="steps" type="range" min="0" max="100" step="1">
+      <output data-out="steps"></output>
+    </div>
+    <p class="hint">How often shapes sit half a cell off the grid.</p>
+  </fieldset>
+  </div>
+
+  <div data-mode-not="glyphs field">
+  <fieldset>
+    <legend><label for="quarter">Quarter gaps</label></legend>
+    <div class="range-row">
+      <input id="quarter" data-num="quarter" type="range" min="0" max="100" step="1">
+      <output data-out="quarter"></output>
+    </div>
+    <p class="hint">How often a separate piece sits a quarter cell from its neighbour, like the letters of the wordmark.</p>
+  </fieldset>
+  </div>
+
+  <div data-mode="scatter">
+    <fieldset>
+      <legend><label for="clump">Clumping</label></legend>
+      <div class="range-row">
+        <input id="clump" data-num="clump" type="range" min="0" max="98" step="1">
+        <output data-out="clump"></output>
+      </div>
+    </fieldset>
+  </div>
+
+  <div data-mode="field">
+    <fieldset>
+      <legend><label for="grain">Grain</label></legend>
+      <div class="range-row">
+        <input id="grain" data-num="grain" type="range" min="1" max="16" step="0.5">
+        <output data-out="grain"></output>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend><label for="stretch">Stretch</label></legend>
+      <div class="range-row">
+        <input id="stretch" data-num="stretch" type="range" min="-100" max="100" step="1">
+        <output data-out="stretch"></output>
+      </div>
+    </fieldset>
+  </div>
+
+  <div data-mode="stems">
+    <fieldset>
+      <legend>Direction</legend>
+      <div class="seg" data-key="direction">
+        <button type="button" data-value="vertical">Vertical</button>
+        <button type="button" data-value="horizontal">Horizontal</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Gutter width</legend>
+      <div class="seg" data-key="gutterWidth">
+        <button type="button" data-value="1">¼ cell</button>
+        <button type="button" data-value="2">½ cell</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend><label for="gutter">Gutters</label></legend>
+      <div class="range-row">
+        <input id="gutter" data-num="gutter" type="range" min="0" max="100" step="1">
+        <output data-out="gutter"></output>
+      </div>
+      <p class="hint">Share of neighbouring stems kept apart instead of merged.</p>
+    </fieldset>
+  </div>
+
+  <div data-mode="glyphs">
+    <fieldset>
+      <legend>Letter size</legend>
+      <div class="seg" data-key="glyphSize">
+        <button type="button" data-value="1">3 cells</button>
+        <button type="button" data-value="2">6</button>
+        <button type="button" data-value="3">9</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Letter gap</legend>
+      <div class="seg" data-key="gap">
+        <button type="button" data-value="1">¼ cell</button>
+        <button type="button" data-value="2">½ cell</button>
+        <button type="button" data-value="0">Merge</button>
+      </div>
+      <p class="hint">The logo sets its letters a quarter cell apart.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Letter mix</legend>
+      <div class="range-row"><span class="mix">L</span><input data-num="wL" type="range" min="0" max="100" step="1" aria-label="Share of L"><output data-out="wL"></output></div>
+      <div class="range-row"><span class="mix">I</span><input data-num="wI" type="range" min="0" max="100" step="1" aria-label="Share of I"><output data-out="wI"></output></div>
+      <div class="range-row"><span class="mix">n</span><input data-num="wn" type="range" min="0" max="100" step="1" aria-label="Share of n"><output data-out="wn"></output></div>
+      <div class="range-row"><span class="mix">A</span><input data-num="wA" type="range" min="0" max="100" step="1" aria-label="Share of A"><output data-out="wA"></output></div>
+    </fieldset>
+    <fieldset>
+      <legend>Letters</legend>
+      <div class="checks">
+        <label><input type="checkbox" data-bool="rotate"> Rotate</label>
+      </div>
+      <p class="hint">Letters are set like type, packed from the top. Blank space removes letters at random.</p>
+    </fieldset>
+  </div>
+
+  <fieldset>
+    <legend>Format</legend>
+    <div class="seg" data-key="format">
+      <button type="button" data-value="1:1">1:1</button>
+      <button type="button" data-value="4:5">4:5</button>
+      <button type="button" data-value="16:9">16:9</button>
+      <button type="button" data-value="9:16">9:16</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="size">Cells across</label></legend>
+    <div class="range-row">
+      <input id="size" data-num="size" type="range" min="8" max="120" step="1">
+      <output id="sizeOut"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Edges</legend>
+    <div class="seg" data-key="edges">
+      <button type="button" data-value="bleed">Bleed</button>
+      <button type="button" data-value="inside">Inside</button>
+      <button type="button" data-value="seamless">Seamless</button>
+    </div>
+    <p class="hint" id="edgesHint"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="radius">Corner radius</label></legend>
+    <div class="range-row">
+      <input id="radius" data-num="radius" type="range" min="0" max="0.25" step="0.005">
+      <output data-out="radius"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Options</legend>
+    <div class="checks">
+      <label><input type="checkbox" data-bool="pinholes"> Fill pinholes</label>
+      <label id="repeatLabel"><input type="checkbox" data-bool="repeat"> Preview 2 × 2</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Colors</legend>
+    <div class="swatches palettes" id="palettes"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="accent">Accent shapes</label></legend>
+    <div class="range-row">
+      <input id="accent" data-num="accent" type="range" min="0" max="60" step="1">
+      <output data-out="accent"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Export</legend>
+    <div class="actions">
+      <button class="btn primary" id="svg" type="button">Download SVG</button>
+      <button class="btn" id="png" type="button">Download PNG</button>
+      <button class="btn" id="copy" type="button">Copy SVG</button>
+      <button class="btn" id="link" type="button">Copy link</button>
+    </div>
+    <div class="checks" style="margin-top:10px">
+      <label><input type="checkbox" data-bool="transparent"> Transparent background</label>
+    </div>
+  </fieldset>
+
+  <div class="notes">
+    <p>Press <kbd>R</kbd> for a new seed. The same seed and settings always give the same texture, and the address bar keeps them all.</p>
+    <p>Every pattern is built from whole cells, so it follows the same corner rule as the logo.</p>
+  </div>
+</aside>
+
+<main class="stage">
+  <svg id="view" xmlns="http://www.w3.org/2000/svg" aria-label="Texture preview"></svg>
+  <div class="status" id="status"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
+
+<script src="lina-geometry.js"></script>
+<script src="lina-texture.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const { generate, toSVG, PALETTES } = LinaTexture;
+const STORE = 'lina-texture-v1';
+
+const FORMATS = { '1:1': [1, 1], '4:5': [4, 5], '16:9': [16, 9], '9:16': [9, 16] };
+const MODE_HINTS = {
+  scatter: 'Random cells. Clumping links them into trails.',
+  field: 'Smooth noise cut into whole cells. Grain sets the size of the islands.',
+  stems: 'Bars one cell wide with random lengths, like the wordmark.',
+  glyphs: 'The letters L, I, n and A, set beside each other like type.',
+};
+const EDGE_HINTS = {
+  bleed: 'Shapes run off the edge of the frame.',
+  inside: 'Shapes stay whole inside the frame.',
+  seamless: 'The frame repeats without a visible seam.',
+};
+
+const DEFAULTS = {
+  mode: 'field', seed: 2718, blank: 50, steps: 50,
+  clump: 60, grain: 5, stretch: 0, direction: 'vertical', gutter: 40, gutterWidth: '1', quarter: 30,
+  rotate: true, glyphSize: '1', gap: '1', wL: 25, wI: 25, wn: 25, wA: 25,
+  format: '1:1', size: 40, edges: 'bleed', radius: 0.25, pinholes: true, repeat: false,
+  palette: 0, accent: 15, transparent: false,
+};
+const p = { ...DEFAULTS };
+
+/* ---------- state in the address bar ---------- */
+
+function readHash() {
+  const q = new URLSearchParams(location.hash.slice(1));
+  if (![...q.keys()].length) return false;
+  for (const [k, def] of Object.entries(DEFAULTS)) {
+    if (!q.has(k)) continue;
+    const v = q.get(k);
+    if (typeof def === 'number') { const n = Number(v); if (Number.isFinite(n)) p[k] = n; }
+    else if (typeof def === 'boolean') p[k] = v === '1';
+    else p[k] = v;
+  }
+  return true;
+}
+
+function writeHash() {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(p)) q.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
+  history.replaceState(null, '', '#' + q.toString());
+  try { localStorage.setItem(STORE, q.toString()); } catch (_) {}
+}
+
+function readStore() {
+  try {
+    const s = localStorage.getItem(STORE);
+    if (s) { history.replaceState(null, '', '#' + s); return readHash(); }
+  } catch (_) {}
+  return false;
+}
+
+/* ---------- engine ---------- */
+
+function dims() {
+  const [fw, fh] = FORMATS[p.format] || FORMATS['1:1'];
+  const cols = Math.round(p.size);
+  return { cols, rows: Math.max(4, Math.round(cols * fh / fw)) };
+}
+
+function engineOptions(scale = 1) {
+  const { cols, rows } = dims();
+  return {
+    mode: p.mode, seed: p.seed | 0, cols, rows, edges: p.edges,
+    blank: p.blank / 100, steps: p.steps / 100, radius: p.radius, pinholes: p.pinholes,
+    accent: p.accent / 100, clump: p.clump / 100, grain: p.grain, stretch: p.stretch / 100,
+    direction: p.direction, gutter: p.gutter / 100, gutterWidth: Number(p.gutterWidth), quarter: p.quarter / 100,
+    rotate: p.rotate, glyphSize: Number(p.glyphSize), gap: Number(p.gap),
+    weights: { L: p.wL, I: p.wI, n: p.wn, A: p.wA }, scale,
+  };
+}
+
+const palette = () => PALETTES[p.palette] || PALETTES[0];
+
+/* ---------- drawing ---------- */
+
+const view = $('#view');
+let current = null;
+let queued = false;
+
+function schedule() {
+  if (queued) return;
+  queued = true;
+  requestAnimationFrame(() => { queued = false; draw(); });
+}
+
+function draw() {
+  // The 2 × 2 preview is traced as one piece, so no seams show between the copies.
+  const reps = p.edges === 'seamless' && p.repeat ? 2 : 1;
+  const res = generate({ ...engineOptions(), tiles: reps });
+  current = res;
+  const c = palette();
+  const W = res.W * reps, H = res.H * reps;
+  view.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  view.innerHTML =
+    `<defs><clipPath id="frame"><rect width="${W}" height="${H}"/></clipPath></defs>` +
+    `<g clip-path="url(#frame)"><rect width="${W}" height="${H}" fill="${c.bg}"/>` +
+    `<path fill="${c.fg}" fill-rule="evenodd" d="${res.base}"/>` +
+    (res.accent ? `<path fill="${c.accent}" fill-rule="evenodd" d="${res.accent}"/>` : '') +
+    `</g>`;
+  const { cols, rows } = dims();
+  const blank = (res.blank * 100).toFixed(1);
+  const short = res.blank * 100 - p.blank > 3;
+  $('#blankActual').textContent = short
+    ? `In this texture: ${blank}% blank, the densest this pattern gets.` +
+      (p.mode === 'glyphs' && p.gap !== '0' ? ' Set the letter gap to Merge to go denser.' : '')
+    : `In this texture: ${blank}% blank`;
+  $('#status').textContent = `${cols} × ${rows} cells, ${res.shapes} shape${res.shapes === 1 ? '' : 's'}`;
+}
+
+/* ---------- controls ---------- */
+
+const FORMAT_OUT = {
+  steps: (v) => v + '%', clump: (v) => v + '%', gutter: (v) => v + '%', accent: (v) => v + '%', quarter: (v) => v + '%',
+  wL: (v) => v + '%', wI: (v) => v + '%', wn: (v) => v + '%', wA: (v) => v + '%',
+  grain: (v) => v + (v === 1 ? ' cell' : ' cells'),
+  stretch: (v) => (v === 0 ? 'None' : v > 0 ? `Tall ${v}` : `Wide ${-v}`),
+  radius: (v) => ({ 0: 'Square', 0.25: '¼ cell', 0.125: '⅛ cell' })[v] ?? `${v.toFixed(3)} cell`,
+};
+
+function syncControls() {
+  document.querySelectorAll('[data-key]').forEach((group) => {
+    const key = group.dataset.key;
+    group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(String(p[key]) === b.dataset.value)));
+  });
+  document.querySelectorAll('[data-num]').forEach((input) => { input.value = p[input.dataset.num]; });
+  document.querySelectorAll('[data-bool]').forEach((input) => { input.checked = !!p[input.dataset.bool]; });
+  document.querySelectorAll('[data-out]').forEach((o) => { o.value = FORMAT_OUT[o.dataset.out](p[o.dataset.out]); });
+  document.querySelectorAll('[data-mode]').forEach((box) => { box.hidden = box.dataset.mode !== p.mode; });
+  document.querySelectorAll('[data-mode-not]').forEach((box) => { box.hidden = box.dataset.modeNot.split(' ').includes(p.mode); });
+  document.querySelectorAll('#palettes button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === p.palette)));
+  $('#seed').value = p.seed;
+  $('#blankOut').value = p.blank + '%';
+  const { cols, rows } = dims();
+  $('#sizeOut').value = `${cols} × ${rows}`;
+  $('#modeHint').textContent = MODE_HINTS[p.mode];
+  $('#edgesHint').textContent = EDGE_HINTS[p.edges];
+  $('#repeatLabel').hidden = p.edges !== 'seamless';
+}
+
+function update() { syncControls(); schedule(); writeHash(); }
+
+document.querySelectorAll('[data-key]').forEach((group) => {
+  group.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    p[group.dataset.key] = btn.dataset.value;
+    update();
+  });
+});
+document.querySelectorAll('[data-num]').forEach((input) => {
+  input.addEventListener('input', () => { p[input.dataset.num] = Number(input.value); update(); });
+});
+document.querySelectorAll('[data-bool]').forEach((input) => {
+  input.addEventListener('change', () => { p[input.dataset.bool] = input.checked; update(); });
+});
+
+$('#palettes').append(...PALETTES.map((c, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', c.name);
+  b.title = c.name;
+  b.style.cssText = `--bg:${c.bg};--fg:${c.fg};--ac:${c.accent}`;
+  b.addEventListener('click', () => { p.palette = i; update(); });
+  return b;
+}));
+
+$('#seed').addEventListener('change', () => {
+  const n = Math.round(Number($('#seed').value));
+  p.seed = Number.isFinite(n) ? Math.min(999999, Math.max(0, n)) : p.seed;
+  update();
+});
+
+function reseed() { p.seed = Math.floor(Math.random() * 1000000); update(); }
+$('#reseed').addEventListener('click', reseed);
+window.addEventListener('keydown', (e) => {
+  if (e.target.matches('input') || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key.toLowerCase() === 'r') { e.preventDefault(); reseed(); }
+});
+
+/* ---------- export ---------- */
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+const fileBase = () => `lina-texture-${p.mode}-${p.seed}`;
+
+function download(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Downloaded ' + name);
+}
+
+// One cell = 20 units in the exported file.
+const exportSVG = () => toSVG(generate(engineOptions(10)), palette(), { transparent: p.transparent });
+
+$('#svg').addEventListener('click', () => download(new Blob([exportSVG()], { type: 'image/svg+xml' }), fileBase() + '.svg'));
+
+$('#png').addEventListener('click', () => {
+  const res = current || generate(engineOptions());
+  const c = palette();
+  const k = 4000 / Math.max(res.W, res.H);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(res.W * k);
+  canvas.height = Math.round(res.H * k);
+  const ctx = canvas.getContext('2d');
+  if (!p.transparent) { ctx.fillStyle = c.bg; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+  ctx.save();
+  ctx.scale(k, k);
+  ctx.beginPath(); ctx.rect(0, 0, res.W, res.H); ctx.clip();
+  ctx.fillStyle = c.fg; ctx.fill(new Path2D(res.base), 'evenodd');
+  if (res.accent) { ctx.fillStyle = c.accent; ctx.fill(new Path2D(res.accent), 'evenodd'); }
+  ctx.restore();
+  canvas.toBlob((blob) => download(blob, fileBase() + '.png'), 'image/png');
+});
+
+async function copyText(text, done) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.append(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  toast(done);
+}
+$('#copy').addEventListener('click', () => copyText(exportSVG(), 'SVG copied'));
+$('#link').addEventListener('click', () => copyText(location.href, 'Link copied'));
+
+/* ---------- boot ---------- */
+
+$('#mark').innerHTML = `<path fill="#9B0A0E" d="${LinaGeometry.outlinePath(LinaGeometry.LETTERS.L.blocks, 0.5)}"/>`;
+if (!readHash()) readStore();
+update();
+</script>
+</body>
+</html>

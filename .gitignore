@@ -1,0 +1,10 @@
+# Licensed typeface: kept locally, never published (see README)
+font/
+
+# Visual references: local only
+references/
+
+# Local tooling
+.claude/
+.playwright-mcp/
+.DS_Store

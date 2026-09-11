@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINA image filter</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="lina.css">
+<style>
+  .stage { background: var(--stage); }
+  #view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .drop {
+    position: absolute; inset: 16px; border: 2px dashed var(--crimson); border-radius: 18px;
+    display: grid; place-items: center; background: rgba(246, 241, 241, .9);
+    font-size: 18px; font-weight: 500; color: var(--crimson); pointer-events: none;
+  }
+
+  .palettes button { position: relative; background: var(--bg); overflow: hidden; }
+  .palettes button::before { content: ""; position: absolute; left: 6px; top: 6px; width: 14px; height: 14px; border-radius: 4px; background: var(--fg); }
+
+  [data-for][hidden], #drop[hidden] { display: none; }
+</style>
+</head>
+<body class="tool">
+
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <svg id="mark" viewBox="0 0 4 6" aria-hidden="true"></svg>
+    <div><strong>LINA</strong><span>Visual code</span></div>
+  </a>
+  <nav class="tools" aria-label="Tools">
+    <a href="grid.html">Cells</a>
+    <a href="texture.html">Textures</a>
+    <a href="image.html" aria-current="page">Images</a>
+  </nav>
+
+  <fieldset>
+    <legend>Image</legend>
+    <div class="actions">
+      <button class="btn primary" id="upload" type="button">Upload image</button>
+      <button class="btn" id="sample" type="button">Use sample</button>
+    </div>
+    <input id="file" type="file" accept="image/*" hidden>
+    <p class="hint" id="imageName"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Filter</legend>
+    <div class="seg" data-key="mode">
+      <button type="button" data-value="halftone">Halftone</button>
+      <button type="button" data-value="stems">Stems</button>
+      <button type="button" data-value="bitmap">Bitmap</button>
+    </div>
+    <p class="hint" id="modeHint"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="detail">Detail</label></legend>
+    <div class="range-row">
+      <input id="detail" data-num="detail" type="range" min="16" max="160" step="1">
+      <output data-out="detail"></output>
+    </div>
+  </fieldset>
+
+  <div data-for="halftone stems">
+    <fieldset>
+      <legend>Screen</legend>
+      <div class="seg" data-key="screen">
+        <button type="button" data-value="2">2 cells</button>
+        <button type="button" data-value="2.5">2½</button>
+        <button type="button" data-value="3">3</button>
+        <button type="button" data-value="4">4</button>
+      </div>
+      <p class="hint">Bigger screens give more steps between light and dark.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dots</legend>
+      <div class="checks">
+        <label><input type="checkbox" data-bool="halfDots"> Half-cell dots</label>
+        <label><input type="checkbox" data-bool="stagger"> Staggered</label>
+        <label><input type="checkbox" data-bool="merge"> Let darks merge</label>
+      </div>
+      <p class="hint">Half-cell dots are the one shape thinner than a cell, like the crossbar of the A. The corner rule makes them round. With darks merging, tones darker than 93% fill their tile and fuse into solid shapes.</p>
+    </fieldset>
+  </div>
+
+  <div data-for="halftone">
+    <fieldset>
+      <legend><label for="bridges">Diagonal bridges</label></legend>
+      <div class="range-row">
+        <input id="bridges" data-num="bridges" type="range" min="0" max="100" step="1">
+        <output data-out="bridges"></output>
+      </div>
+      <p class="hint" id="bridgesHint"></p>
+    </fieldset>
+  </div>
+
+  <div data-for="stems">
+    <fieldset>
+      <legend>Direction</legend>
+      <div class="seg" data-key="direction">
+        <button type="button" data-value="vertical">Vertical</button>
+        <button type="button" data-value="horizontal">Horizontal</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Gap between stems</legend>
+      <div class="seg" data-key="stemGap">
+        <button type="button" data-value="1">¼ cell</button>
+        <button type="button" data-value="2">½ cell</button>
+      </div>
+      <p class="hint">A quarter cell, like the letters of the wordmark.</p>
+    </fieldset>
+  </div>
+
+  <fieldset>
+    <legend>Dithering</legend>
+    <div class="seg" data-key="dither">
+      <button type="button" data-value="none">None</button>
+      <button type="button" data-value="ordered">Ordered</button>
+      <button type="button" data-value="diffusion">Diffusion</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="brightness">Brightness</label></legend>
+    <div class="range-row">
+      <input id="brightness" data-num="brightness" type="range" min="-100" max="100" step="1">
+      <output data-out="brightness"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="contrast">Contrast</label></legend>
+    <div class="range-row">
+      <input id="contrast" data-num="contrast" type="range" min="-100" max="100" step="1">
+      <output data-out="contrast"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="midtones">Midtones</label></legend>
+    <div class="range-row">
+      <input id="midtones" data-num="midtones" type="range" min="-100" max="100" step="1">
+      <output data-out="midtones"></output>
+    </div>
+    <p class="hint">Raise it to open up skin and faces while blacks stay black.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="cutoff">Clear highlights</label></legend>
+    <div class="range-row">
+      <input id="cutoff" data-num="cutoff" type="range" min="0" max="50" step="1">
+      <output data-out="cutoff"></output>
+    </div>
+    <p class="hint">Tones lighter than this stay as bare paper.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="smooth">Smooth</label></legend>
+    <div class="range-row">
+      <input id="smooth" data-num="smooth" type="range" min="0" max="100" step="1">
+      <output data-out="smooth"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Options</legend>
+    <div class="checks">
+      <label><input type="checkbox" data-bool="original"> Original beside it</label>
+      <label><input type="checkbox" data-bool="invert"> Invert</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="radius">Corner radius</label></legend>
+    <div class="range-row">
+      <input id="radius" data-num="radius" type="range" min="0" max="0.25" step="0.005">
+      <output data-out="radius"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Colors</legend>
+    <div class="swatches palettes" id="palettes"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Export</legend>
+    <div class="actions">
+      <button class="btn primary" id="svg" type="button">Download SVG</button>
+      <button class="btn" id="png" type="button">Download PNG</button>
+      <button class="btn" id="copy" type="button">Copy SVG</button>
+      <button class="btn" id="link" type="button">Copy link</button>
+    </div>
+    <div class="checks" style="margin-top:10px">
+      <label><input type="checkbox" data-bool="transparent"> Transparent background</label>
+    </div>
+  </fieldset>
+
+  <div class="notes">
+    <p>Your image is processed in this browser and never uploaded anywhere. The copied link keeps the settings, not the image.</p>
+  </div>
+</aside>
+
+<main class="stage" id="stage">
+  <canvas id="view" aria-label="Original image and filtered result"></canvas>
+  <div class="drop" id="drop" hidden>Drop to filter this image</div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
+
+<script src="lina-geometry.js"></script>
+<script src="lina-image.js"></script>
+<script src="lina-sample.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const Geo = LinaGeometry;
+const { PALETTES } = LinaImage;
+const STORE = 'lina-image-v1';
+const PHOTO = 'lina-image-photo-v2';
+
+const MODE_HINTS = {
+  halftone: 'A grid of dots that grow with the darkness of the image.',
+  stems: 'Bars one cell wide, cut shorter where the image is lighter.',
+  bitmap: 'Two tones: every part of the image is either ink or paper.',
+};
+const NOUNS = { halftone: 'dots', stems: 'stems', bitmap: 'cells' };
+
+const DEFAULTS = {
+  mode: 'halftone', detail: 84, screen: '3', halfDots: true, stagger: false, merge: false, bridges: 30,
+  direction: 'vertical', stemGap: '1', dither: 'diffusion',
+  brightness: 0, contrast: 0, midtones: 35, cutoff: 8, smooth: 30, invert: false, original: true,
+  radius: 0.25, palette: 1, transparent: false,
+};
+const p = { ...DEFAULTS };
+
+/* ---------- settings in the address bar ---------- */
+
+function readHash() {
+  const q = new URLSearchParams(location.hash.slice(1));
+  if (![...q.keys()].length) return false;
+  for (const [k, def] of Object.entries(DEFAULTS)) {
+    if (!q.has(k)) continue;
+    const v = q.get(k);
+    if (typeof def === 'number') { const n = Number(v); if (Number.isFinite(n)) p[k] = n; }
+    else if (typeof def === 'boolean') p[k] = v === '1';
+    else p[k] = v;
+  }
+  return true;
+}
+
+function writeHash() {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(p)) q.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
+  history.replaceState(null, '', '#' + q.toString());
+  try { localStorage.setItem(STORE, q.toString()); } catch (_) {}
+}
+
+function readStore() {
+  try {
+    const s = localStorage.getItem(STORE);
+    if (s) { history.replaceState(null, '', '#' + s); return readHash(); }
+  } catch (_) {}
+  return false;
+}
+
+const engineOptions = () => ({
+  mode: p.mode, detail: p.detail, screen: Number(p.screen), halfDots: p.halfDots, stagger: p.stagger, merge: p.merge,
+  bridges: p.bridges / 100,
+  direction: p.direction, stemGap: Number(p.stemGap), dither: p.dither,
+  brightness: p.brightness / 100, contrast: p.contrast / 100, midtones: p.midtones / 100,
+  cutoff: p.cutoff / 100, smooth: p.smooth / 100,
+  invert: p.invert, radius: p.radius,
+});
+const palette = () => PALETTES[p.palette] || PALETTES[0];
+
+/* ---------- source image ---------- */
+
+const sourceCanvas = document.createElement('canvas');
+let src = null;
+
+function setSource(drawable, label, keep) {
+  const w0 = drawable.naturalWidth || drawable.width, h0 = drawable.naturalHeight || drawable.height;
+  const k = Math.min(1, 1600 / Math.max(w0, h0));
+  const w = Math.max(1, Math.round(w0 * k)), h = Math.max(1, Math.round(h0 * k));
+  sourceCanvas.width = w; sourceCanvas.height = h;
+  const g = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = '#FFFFFF';
+  g.fillRect(0, 0, w, h);
+  g.drawImage(drawable, 0, 0, w, h);
+  src = LinaImage.prepare(g.getImageData(0, 0, w, h));
+  $('#imageName').textContent = label
+    ? `${label}. Upload another, or drop or paste one anywhere.`
+    : 'Sample portrait. Upload your own photo, or drop or paste one anywhere.';
+  if (keep) {
+    try { localStorage.setItem(PHOTO, JSON.stringify({ label, data: sourceCanvas.toDataURL('image/jpeg', 0.85) })); }
+    catch (_) { try { localStorage.removeItem(PHOTO); } catch (__) {} }
+  }
+  schedule();
+}
+
+async function useSample() {
+  try { localStorage.removeItem(PHOTO); } catch (_) {}
+  setSource(await loadImage(window.LINA_SAMPLE), '', false);
+}
+
+const loadImage = (url) => new Promise((resolve, reject) => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = reject;
+  img.src = url;
+});
+
+async function loadFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('That file is not an image.'); return; }
+  const url = URL.createObjectURL(file);
+  try { setSource(await loadImage(url), file.name || 'Pasted image', true); }
+  catch (_) { toast('This image could not be opened. Try a JPG or PNG.'); }
+  finally { URL.revokeObjectURL(url); }
+}
+
+/* ---------- drawing ---------- */
+
+const stage = $('#stage');
+const canvas = $('#view');
+const ctx = canvas.getContext('2d');
+let result = null, path = null, queued = false;
+
+function schedule() {
+  if (queued) return;
+  queued = true;
+  requestAnimationFrame(() => { queued = false; compute(); paint(); });
+}
+
+function compute() {
+  if (!src) return;
+  result = LinaImage.process(src, engineOptions());
+  path = new Path2D(Geo.traceBitmap(result.bits, result.U, result.V, p.radius * LinaImage.CELL));
+}
+
+// Original and result side by side, or stacked when that gives bigger frames.
+function frames(box) {
+  const pad = box.width < 520 ? 16 : 32, gap = 20, caption = 28;
+  const U = result.U, V = result.V;
+  const aw = box.width - 2 * pad, ah = box.height - 2 * pad;
+  if (!p.original) {
+    const k = Math.min(aw / U, (ah - caption) / V);
+    return [{ kind: 'result', k, x: (box.width - U * k) / 2, y: pad + (ah - caption - V * k) / 2 }];
+  }
+  const kRow = Math.min((aw - gap) / 2 / U, (ah - caption) / V);
+  const kCol = Math.min(aw / U, (ah - gap - 2 * caption) / 2 / V);
+  const k = Math.max(kRow, kCol), w = U * k, h = V * k;
+  if (kRow >= kCol) {
+    const x = (box.width - 2 * w - gap) / 2, y = pad + (ah - caption - h) / 2;
+    return [{ kind: 'original', k, x, y }, { kind: 'result', k, x: x + w + gap, y }];
+  }
+  const x = (box.width - w) / 2, y = pad + (ah - 2 * (h + caption) - gap) / 2;
+  return [{ kind: 'original', k, x, y }, { kind: 'result', k, x, y: y + h + caption + gap }];
+}
+
+function paint() {
+  const box = stage.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(box.width * dpr);
+  canvas.height = Math.round(box.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, box.width, box.height);
+  if (!result) return;
+  const c = palette();
+  for (const f of frames(box)) {
+    const w = result.U * f.k, h = result.V * f.k;
+    ctx.save();
+    ctx.shadowColor = 'rgba(82, 0, 0, .18)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 1;
+    ctx.fillStyle = f.kind === 'original' ? '#FFFFFF' : c.bg;
+    ctx.fillRect(f.x, f.y, w, h);
+    ctx.restore();
+    if (f.kind === 'original') {
+      ctx.drawImage(sourceCanvas, f.x, f.y, w, h);
+    } else {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(f.x, f.y, w, h); ctx.clip();
+      ctx.translate(f.x, f.y); ctx.scale(f.k, f.k);
+      ctx.fillStyle = c.fg;
+      ctx.fill(path, 'evenodd');
+      ctx.restore();
+    }
+    ctx.font = '500 12.5px Neometric, ui-sans-serif, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(82, 0, 0, .62)';
+    ctx.fillText(f.kind === 'original' ? 'Original' : `Filtered, ${result.label}`, f.x, f.y + h + 19);
+  }
+}
+new ResizeObserver(paint).observe(stage);
+
+/* ---------- controls ---------- */
+
+const FORMAT_OUT = {
+  detail: (v) => `${v} ${NOUNS[p.mode]}`,
+  brightness: (v) => (v > 0 ? '+' + v : String(v)),
+  contrast: (v) => (v > 0 ? '+' + v : String(v)),
+  midtones: (v) => (v > 0 ? '+' + v : String(v)),
+  cutoff: (v) => v + '%',
+  smooth: (v) => v + '%',
+  bridges: (v) => v + '%',
+  radius: (v) => ({ 0: 'Square', 0.25: '¼ cell', 0.125: '⅛ cell' })[v] ?? `${v.toFixed(3)} cell`,
+};
+
+function syncControls() {
+  document.querySelectorAll('[data-key]').forEach((group) => {
+    const key = group.dataset.key;
+    group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(String(p[key]) === b.dataset.value)));
+  });
+  document.querySelectorAll('[data-num]').forEach((input) => { input.value = p[input.dataset.num]; });
+  document.querySelectorAll('[data-bool]').forEach((input) => { input.checked = !!p[input.dataset.bool]; });
+  document.querySelectorAll('[data-out]').forEach((o) => { o.value = FORMAT_OUT[o.dataset.out](p[o.dataset.out]); });
+  document.querySelectorAll('[data-for]').forEach((box) => { box.hidden = !box.dataset.for.split(' ').includes(p.mode); });
+  document.querySelectorAll('#palettes button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === p.palette)));
+  $('#modeHint').textContent = MODE_HINTS[p.mode];
+  $('#bridges').disabled = p.stagger;
+  $('#bridgesHint').textContent = p.stagger
+    ? 'Staggered rows never line up corner to corner, so there are no bridges. Turn off Staggered to use them.'
+    : 'Around half tone, full squares alternate with empty tiles and join corner to corner with a neck. Higher values widen the band.';
+}
+
+function update() { syncControls(); schedule(); writeHash(); }
+
+document.querySelectorAll('[data-key]').forEach((group) => {
+  group.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    p[group.dataset.key] = btn.dataset.value;
+    update();
+  });
+});
+document.querySelectorAll('[data-num]').forEach((input) => {
+  input.addEventListener('input', () => { p[input.dataset.num] = Number(input.value); update(); });
+});
+document.querySelectorAll('[data-bool]').forEach((input) => {
+  input.addEventListener('change', () => { p[input.dataset.bool] = input.checked; update(); });
+});
+
+$('#palettes').append(...PALETTES.map((c, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', c.name);
+  b.title = c.name;
+  b.style.cssText = `--bg:${c.bg};--fg:${c.fg}`;
+  b.addEventListener('click', () => { p.palette = i; update(); });
+  return b;
+}));
+
+$('#upload').addEventListener('click', () => $('#file').click());
+$('#file').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
+$('#sample').addEventListener('click', useSample);
+
+// Drop and paste anywhere on the page.
+let dragDepth = 0;
+const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('#drop').hidden = false; });
+window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('#drop').hidden = true; });
+window.addEventListener('drop', (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dragDepth = 0; $('#drop').hidden = true;
+  loadFile(e.dataTransfer.files[0]);
+});
+window.addEventListener('paste', (e) => {
+  const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith('image/'));
+  if (item) { e.preventDefault(); loadFile(item.getAsFile()); }
+});
+
+/* ---------- export ---------- */
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+const fileBase = () => `lina-image-${p.mode}`;
+
+function download(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Downloaded ' + name);
+}
+
+// One cell = 20 units in the exported file.
+function svgString() {
+  const S = 5, c = palette();
+  const w = result.U * S, h = result.V * S;
+  const d = Geo.traceBitmap(result.bits, result.U, result.V, p.radius * LinaImage.CELL, { scale: S });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">\n` +
+    (p.transparent ? '' : `  <rect width="${w}" height="${h}" fill="${c.bg}"/>\n`) +
+    `  <path fill="${c.fg}" fill-rule="evenodd" d="${d}"/>\n</svg>\n`;
+}
+
+$('#svg').addEventListener('click', () => { if (result) download(new Blob([svgString()], { type: 'image/svg+xml' }), fileBase() + '.svg'); });
+
+$('#png').addEventListener('click', () => {
+  if (!result) return;
+  const c = palette();
+  const k = 4000 / Math.max(result.U, result.V);
+  const out = document.createElement('canvas');
+  out.width = Math.round(result.U * k);
+  out.height = Math.round(result.V * k);
+  const g = out.getContext('2d');
+  if (!p.transparent) { g.fillStyle = c.bg; g.fillRect(0, 0, out.width, out.height); }
+  g.scale(k, k);
+  g.fillStyle = c.fg;
+  g.fill(path, 'evenodd');
+  out.toBlob((blob) => download(blob, fileBase() + '.png'), 'image/png');
+});
+
+async function copyText(text, done) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.append(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  toast(done);
+}
+$('#copy').addEventListener('click', () => { if (result) copyText(svgString(), 'SVG copied'); });
+$('#link').addEventListener('click', () => copyText(location.href, 'Link copied. It keeps the settings, not the image.'));
+
+/* ---------- boot ---------- */
+
+$('#mark').innerHTML = `<path fill="#9B0A0E" d="${Geo.outlinePath(Geo.LETTERS.L.blocks, 0.5)}"/>`;
+if (!readHash()) readStore();
+update();
+
+(async function restorePhoto() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PHOTO));
+    if (saved && saved.data) { setSource(await loadImage(saved.data), saved.label, false); return; }
+  } catch (_) {}
+  useSample();
+})();
+</script>
+</body>
+</html>

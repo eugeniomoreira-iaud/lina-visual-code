@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINA cell editor</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="lina.css">
+<style>
+  #board { flex: 1; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #board .fine { stroke: var(--rule); stroke-opacity: .45; }
+  #board .minor { stroke: var(--rule); }
+  #board .major { stroke: var(--rule-strong); }
+  #board .frame { fill: none; stroke: var(--rule-strong); }
+  #board .selected { fill: rgba(255, 255, 255, .22); }
+  #board .illegal { fill: none; stroke: #fff; stroke-width: 2; stroke-dasharray: 4 3; }
+  #board .ghost { fill: rgba(155, 10, 14, .14); }
+  .status.warn { color: var(--crimson); }
+</style>
+</head>
+<body class="tool">
+
+<aside class="sidebar">
+  <a class="brand" href="index.html">
+    <svg id="mark" viewBox="0 0 4 6" aria-hidden="true"></svg>
+    <div><strong>LINA</strong><span>Visual code</span></div>
+  </a>
+  <nav class="tools" aria-label="Tools">
+    <a href="grid.html" aria-current="page">Cells</a>
+    <a href="texture.html">Textures</a>
+    <a href="image.html">Images</a>
+  </nav>
+
+  <fieldset>
+    <legend>New block</legend>
+    <div class="seg" data-key="brush">
+      <button type="button" data-value="4">Cell</button>
+      <button type="button" data-value="2">Half cell</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Snap to</legend>
+    <div class="seg" data-key="snap">
+      <button type="button" data-value="4">Cell</button>
+      <button type="button" data-value="2">Half</button>
+      <button type="button" data-value="1">Quarter</button>
+    </div>
+    <p class="hint">A quarter step is for spacing separate shapes, like the letters of the wordmark. Blocks that connect must stay on the half-cell grid.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label for="radius">Corner radius</label></legend>
+    <div class="range-row">
+      <input id="radius" type="range" min="0" max="0.25" step="0.005">
+      <output id="radiusOut" for="radius"></output>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Show</legend>
+    <div class="checks">
+      <label><input type="checkbox" id="showGrid"> Grid</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Color</legend>
+    <div class="swatches" data-key="color">
+      <button type="button" data-value="#9B0A0E" style="background:#9B0A0E" aria-label="Crimson"></button>
+      <button type="button" data-value="#520000" style="background:#520000" aria-label="Oxblood"></button>
+      <button type="button" data-value="#000000" style="background:#000000" aria-label="Black"></button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Grid size in cells</legend>
+    <div class="size">
+      <input id="cols" type="number" min="4" max="48" aria-label="Columns">
+      <span>×</span>
+      <input id="rows" type="number" min="3" max="32" aria-label="Rows">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Edit</legend>
+    <div class="actions">
+      <button class="btn" id="undo" type="button">Undo</button>
+      <button class="btn" id="redo" type="button">Redo</button>
+      <button class="btn" id="delete" type="button">Delete block</button>
+      <button class="btn" id="clear" type="button">Clear</button>
+      <button class="btn" id="preset" type="button" style="grid-column: span 2">Load LINA wordmark</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Export</legend>
+    <div class="actions">
+      <button class="btn primary" id="download" type="button">Download SVG</button>
+      <button class="btn" id="copy" type="button">Copy SVG</button>
+    </div>
+  </fieldset>
+
+  <div class="notes">
+    <p>Click an empty spot to add a block. Drag a block to move it. Right-click or press <kbd>Delete</kbd> to remove it. Arrow keys nudge the selected block.</p>
+    <p>Free corners round outward. Corners that meet a neighbour, even diagonally, round inward. A block outlined in white sits a quarter cell off inside a connected shape, which the rule does not allow.</p>
+  </div>
+</aside>
+
+<main class="stage">
+  <svg id="board" xmlns="http://www.w3.org/2000/svg" aria-label="Grid board">
+    <g id="gridLayer"></g>
+    <path id="shape" fill-rule="evenodd"></path>
+    <g id="cellLayer"></g>
+    <rect id="ghost" class="ghost" visibility="hidden"></rect>
+  </svg>
+  <div class="status" id="status"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
+
+<script src="lina-geometry.js"></script>
+<script>
+/*
+  Units: 1 unit = ¼ cell. A "cell" block is 4×4 units, a "half cell" block is 2×2.
+  Blocks may sit anywhere on the quarter grid, but blocks that connect (touch or
+  overlap) must keep a whole number of half cells between their origins, so a
+  shape's inside geometry stays on the half-cell grid. The outline comes from
+  LinaGeometry, shared with the other tools.
+*/
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s) => document.querySelector(s);
+const STORE = 'lina-grid-v2';
+const { outlinePath, LETTERS, LETTER_GAP } = LinaGeometry;
+const CELL = 4;
+
+// The wordmark on the quarter grid, with the logo's own ¼-cell letter spacing.
+const LINA = [];
+{
+  let x = 0;
+  for (const k of ['L', 'I', 'n', 'A']) {
+    for (const [bx, by, s] of LETTERS[k].blocks) LINA.push([x + bx * 2, by * 2, s * 2]);
+    x += (LETTERS[k].w + LETTER_GAP) * 2;
+  }
+}
+const LINA_W = 70, LINA_H = 12;
+
+const state = {
+  cols: 20, rows: 7,
+  blocks: [],
+  brush: 4, snap: 2, radius: 0.25,
+  showGrid: true,
+  color: '#9B0A0E',
+};
+let selected = null;
+let drag = null;
+const history = [];
+const future = [];
+
+const W = () => state.cols * CELL;
+const H = () => state.rows * CELL;
+const rUnits = () => state.radius * CELL;
+
+/* ---------- legality ---------- */
+
+// Blocks that touch or overlap form one shape. Inside a shape every block must share
+// the same quarter alignment. Returns the blocks that break this.
+function illegalBlocks() {
+  const b = state.blocks, n = b.length;
+  const parent = Array.from({ length: n }, (_, i) => i);
+  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  const touch = (p, q) => p.x + p.s >= q.x && q.x + q.s >= p.x && p.y + p.s >= q.y && q.y + q.s >= p.y;
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (touch(b[i], b[j])) parent[find(i)] = find(j);
+  const groups = new Map();
+  b.forEach((blk, i) => {
+    const g = find(i);
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(blk);
+  });
+  const bad = [];
+  for (const members of groups.values()) {
+    const tally = new Map();
+    for (const m of members) { const c = (m.x & 1) * 2 + (m.y & 1); tally.set(c, (tally.get(c) || 0) + 1); }
+    if (tally.size < 2) continue;
+    const major = [...tally.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    for (const m of members) if ((m.x & 1) * 2 + (m.y & 1) !== major) bad.push(m);
+  }
+  return bad;
+}
+
+/* ---------- rendering ---------- */
+
+const board = $('#board');
+const shape = $('#shape');
+const gridLayer = $('#gridLayer');
+const cellLayer = $('#cellLayer');
+const ghost = $('#ghost');
+
+function el(tag, attrs) {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+function drawGrid() {
+  const pad = 2;
+  board.setAttribute('viewBox', `${-pad} ${-pad} ${W() + pad * 2} ${H() + pad * 2}`);
+  gridLayer.replaceChildren();
+  if (state.showGrid) {
+    const cls = (v) => (v % 4 ? (v % 2 ? 'fine' : 'minor') : 'major');
+    for (let x = 1; x < W(); x++)
+      gridLayer.append(el('line', { class: cls(x), x1: x, y1: 0, x2: x, y2: H(), 'vector-effect': 'non-scaling-stroke' }));
+    for (let y = 1; y < H(); y++)
+      gridLayer.append(el('line', { class: cls(y), x1: 0, y1: y, x2: W(), y2: y, 'vector-effect': 'non-scaling-stroke' }));
+  }
+  gridLayer.append(el('rect', { class: 'frame', x: 0, y: 0, width: W(), height: H(), 'vector-effect': 'non-scaling-stroke' }));
+}
+
+function render() {
+  shape.setAttribute('d', outlinePath(state.blocks, rUnits()));
+  shape.setAttribute('fill', state.color);
+  cellLayer.replaceChildren();
+  if (selected) {
+    cellLayer.append(el('rect', { class: 'selected', x: selected.x, y: selected.y, width: selected.s, height: selected.s }));
+  }
+  const bad = illegalBlocks();
+  for (const b of bad) {
+    cellLayer.append(el('rect', { class: 'illegal', x: b.x, y: b.y, width: b.s, height: b.s, rx: rUnits(), 'vector-effect': 'non-scaling-stroke' }));
+  }
+  const n = state.blocks.length;
+  const status = $('#status');
+  status.classList.toggle('warn', bad.length > 0);
+  status.textContent = n === 0 ? 'Empty grid. Click to add a block.'
+    : bad.length ? `${bad.length} block${bad.length === 1 ? ' sits' : 's sit'} a quarter cell off inside a shape`
+    : `${n} block${n === 1 ? '' : 's'}`;
+  $('#undo').disabled = !history.length;
+  $('#redo').disabled = !future.length;
+  $('#delete').disabled = !selected;
+}
+
+function syncControls() {
+  document.querySelectorAll('[data-key]').forEach((group) => {
+    const key = group.dataset.key;
+    group.querySelectorAll('button').forEach((b) => {
+      b.setAttribute('aria-pressed', String(String(state[key]) === b.dataset.value));
+    });
+  });
+  $('#radius').value = state.radius;
+  $('#radiusOut').value = radiusLabel(state.radius);
+  $('#showGrid').checked = state.showGrid;
+  $('#cols').value = state.cols;
+  $('#rows').value = state.rows;
+}
+
+function radiusLabel(v) {
+  const named = { 0: 'Square', 0.25: '¼ cell', 0.125: '⅛ cell' };
+  return named[v] ?? `${v.toFixed(3)} cell`;
+}
+
+/* ---------- state & history ---------- */
+
+const snapshot = () => JSON.stringify(state.blocks);
+
+function commit(before) {
+  history.push(before);
+  if (history.length > 300) history.shift();
+  future.length = 0;
+  save();
+}
+
+function restore(json) {
+  state.blocks = JSON.parse(json);
+  selected = null;
+  render();
+  save();
+}
+
+function undo() { if (!history.length) return; future.push(snapshot()); restore(history.pop()); }
+function redo() { if (!future.length) return; history.push(snapshot()); restore(future.pop()); }
+
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) {}
+}
+
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE));
+    if (saved && Array.isArray(saved.blocks)) {
+      for (const k of Object.keys(state)) if (k in saved) state[k] = saved[k];
+      return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+function presetBlocks() {
+  const ox = Math.max(0, Math.floor((W() - LINA_W) / 2)) & ~1;
+  const oy = Math.max(0, Math.floor((H() - LINA_H) / 2)) & ~1;
+  return LINA.map(([x, y, s]) => ({ x: x + ox, y: y + oy, s }));
+}
+
+function loadPreset() {
+  const before = snapshot();
+  if (W() < LINA_W) { state.cols = Math.ceil(LINA_W / CELL) + 1; syncControls(); drawGrid(); }
+  state.blocks = presetBlocks();
+  clampAll();
+  selected = null;
+  commit(before);
+  render();
+}
+
+function clampAll() {
+  for (const b of state.blocks) {
+    b.x = Math.min(Math.max(0, b.x), W() - b.s);
+    b.y = Math.min(Math.max(0, b.y), H() - b.s);
+  }
+}
+
+function dedupe(keep) {
+  state.blocks = state.blocks.filter((b) => b === keep || !(b.x === keep.x && b.y === keep.y && b.s === keep.s));
+}
+
+function removeBlock(b) {
+  const before = snapshot();
+  state.blocks = state.blocks.filter((x) => x !== b);
+  if (selected === b) selected = null;
+  commit(before);
+  render();
+}
+
+/* ---------- pointer interaction ---------- */
+
+function toGrid(e) {
+  const pt = board.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(board.getScreenCTM().inverse());
+}
+
+const snapTo = (v) => Math.round(v / state.snap) * state.snap;
+
+function hitTest(p) {
+  for (let i = state.blocks.length - 1; i >= 0; i--) {
+    const b = state.blocks[i];
+    if (p.x >= b.x && p.x < b.x + b.s && p.y >= b.y && p.y < b.y + b.s) return b;
+  }
+  return null;
+}
+
+const inside = (p) => p.x >= 0 && p.y >= 0 && p.x < W() && p.y < H();
+
+function placement(p) {
+  const s = state.brush;
+  return {
+    x: Math.min(Math.max(0, snapTo(p.x - s / 2)), W() - s),
+    y: Math.min(Math.max(0, snapTo(p.y - s / 2)), H() - s),
+    s,
+  };
+}
+
+board.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  const p = toGrid(e);
+  let b = hitTest(p);
+  const before = snapshot();
+  let created = false;
+  if (!b) {
+    if (!inside(p)) { selected = null; render(); return; }
+    b = placement(p);
+    state.blocks.push(b);
+    created = true;
+  } else {
+    state.blocks.splice(state.blocks.indexOf(b), 1);
+    state.blocks.push(b);
+  }
+  selected = b;
+  drag = { b, offX: p.x - b.x, offY: p.y - b.y, before, moved: created };
+  board.setPointerCapture(e.pointerId);
+  ghost.setAttribute('visibility', 'hidden');
+  board.style.cursor = 'grabbing';
+  render();
+});
+
+board.addEventListener('pointermove', (e) => {
+  const p = toGrid(e);
+  if (drag) {
+    const b = drag.b;
+    const nx = Math.min(Math.max(0, snapTo(p.x - drag.offX)), W() - b.s);
+    const ny = Math.min(Math.max(0, snapTo(p.y - drag.offY)), H() - b.s);
+    if (nx !== b.x || ny !== b.y) { b.x = nx; b.y = ny; drag.moved = true; render(); }
+    return;
+  }
+  const over = hitTest(p);
+  if (over || !inside(p)) {
+    ghost.setAttribute('visibility', 'hidden');
+    board.style.cursor = over ? 'grab' : 'default';
+  } else {
+    const g = placement(p);
+    ghost.setAttribute('x', g.x); ghost.setAttribute('y', g.y);
+    ghost.setAttribute('width', g.s); ghost.setAttribute('height', g.s);
+    ghost.setAttribute('visibility', 'visible');
+    board.style.cursor = 'crosshair';
+  }
+});
+
+function endDrag() {
+  if (!drag) return;
+  if (drag.moved) { dedupe(drag.b); commit(drag.before); }
+  drag = null;
+  board.style.cursor = 'grab';
+  render();
+}
+board.addEventListener('pointerup', endDrag);
+board.addEventListener('pointercancel', endDrag);
+board.addEventListener('pointerleave', () => { if (!drag) ghost.setAttribute('visibility', 'hidden'); });
+
+board.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const b = hitTest(toGrid(e));
+  if (b) removeBlock(b);
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.target.matches('input')) return;
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
+  if (!selected) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeBlock(selected); return; }
+  if (e.key === 'Escape') { selected = null; render(); return; }
+  const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (dirs[e.key]) {
+    e.preventDefault();
+    const before = snapshot();
+    const [dx, dy] = dirs[e.key];
+    const b = selected;
+    const nx = Math.min(Math.max(0, b.x + dx * state.snap), W() - b.s);
+    const ny = Math.min(Math.max(0, b.y + dy * state.snap), H() - b.s);
+    if (nx !== b.x || ny !== b.y) { b.x = nx; b.y = ny; dedupe(b); commit(before); render(); }
+  }
+});
+
+/* ---------- controls ---------- */
+
+document.querySelectorAll('[data-key]').forEach((group) => {
+  group.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const key = group.dataset.key;
+    state[key] = key === 'color' ? btn.dataset.value : Number(btn.dataset.value);
+    syncControls(); render(); save();
+  });
+});
+
+$('#radius').addEventListener('input', (e) => {
+  state.radius = Number(e.target.value);
+  $('#radiusOut').value = radiusLabel(state.radius);
+  render(); save();
+});
+$('#showGrid').addEventListener('change', (e) => { state.showGrid = e.target.checked; drawGrid(); save(); });
+
+function resize() {
+  const cols = Math.min(48, Math.max(4, Math.round(Number($('#cols').value) || state.cols)));
+  const rows = Math.min(32, Math.max(3, Math.round(Number($('#rows').value) || state.rows)));
+  if (cols === state.cols && rows === state.rows) { syncControls(); return; }
+  const before = snapshot();
+  state.cols = cols; state.rows = rows;
+  clampAll();
+  commit(before);
+  syncControls(); drawGrid(); render();
+}
+$('#cols').addEventListener('change', resize);
+$('#rows').addEventListener('change', resize);
+
+$('#undo').addEventListener('click', undo);
+$('#redo').addEventListener('click', redo);
+$('#delete').addEventListener('click', () => selected && removeBlock(selected));
+$('#clear').addEventListener('click', () => {
+  if (!state.blocks.length) return;
+  const before = snapshot();
+  state.blocks = []; selected = null;
+  commit(before); render();
+});
+$('#preset').addEventListener('click', loadPreset);
+
+/* ---------- export ---------- */
+
+function exportSVG() {
+  if (!state.blocks.length) return null;
+  const S = 50; // one cell = 200 units
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const b of state.blocks) {
+    minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
+    maxX = Math.max(maxX, b.x + b.s); maxY = Math.max(maxY, b.y + b.s);
+  }
+  const d = outlinePath(state.blocks, rUnits(), S, -minX * S, -minY * S);
+  const w = (maxX - minX) * S, h = (maxY - minY) * S;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">\n` +
+    `  <path fill="${state.color}" fill-rule="evenodd" d="${d}"/>\n</svg>\n`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+$('#download').addEventListener('click', () => {
+  const svg = exportSVG();
+  if (!svg) return toast('Add a block before exporting.');
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'lina-grid.svg';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Downloaded lina-grid.svg');
+});
+
+$('#copy').addEventListener('click', async () => {
+  const svg = exportSVG();
+  if (!svg) return toast('Add a block before exporting.');
+  try {
+    await navigator.clipboard.writeText(svg);
+  } catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = svg; document.body.append(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  toast('SVG copied');
+});
+
+/* ---------- boot ---------- */
+
+$('#mark').innerHTML = `<path fill="#9B0A0E" d="${outlinePath(LETTERS.L.blocks, 0.5)}"/>`;
+
+if (!load()) state.blocks = presetBlocks();
+clampAll();
+syncControls();
+drawGrid();
+render();
+</script>
+</body>
+</html>
