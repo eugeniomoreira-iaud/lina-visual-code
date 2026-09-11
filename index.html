@@ -98,7 +98,6 @@
   .minor { stroke: var(--rule); }
   .major { stroke: var(--rule-strong); }
   .cellline { fill: none; stroke: var(--oxblood); stroke-opacity: .55; stroke-dasharray: 3 3; }
-  .emerge .cellline { stroke-opacity: .32; }
 
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; gap: 28px; }
@@ -232,44 +231,137 @@ new ResizeObserver(([entry]) => {
   document.documentElement.style.setProperty('--foot', (entry.contentRect.width * 2 / 17.5).toFixed(1) + 'px');
 }).observe(document.getElementById('wordmark'));
 
-// Emergence: the wordmark's cells, pushed out from its centre and snapped to the half-cell grid.
-// Quarter-cell units. Cells of one letter stay whole half cells apart and cells of different
-// letters never touch, so every step is a legal drawing. At full spread each cell stands alone.
+// Emergence: the wordmark's cells start scattered at random and fly to their places,
+// landing at almost the same moment. Quarter-cell units. Separate shapes glide freely;
+// inside a shape, cells keep whole half cells between them, so every outline stays on the
+// rule's grid. Start points are drawn until no cell brushes a cell of another letter on
+// the way.
 (function () {
   const cells = [];
   let x = 0;
   for (const k of ['L', 'I', 'n', 'A']) {
-    for (const [bx, by, s] of LETTERS[k].blocks) cells.push({ x: (x + bx) * 2, y: by * 2, s: s * 2 });
+    for (const [bx, by, s] of LETTERS[k].blocks) cells.push({ x: (x + bx) * 2, y: by * 2, s: s * 2, letter: k });
     x += LETTERS[k].w + LETTER_GAP;
   }
-  const CX = x - LETTER_GAP, CY = 6, SPREAD = 3;
-  const layout = (k) => cells.map((c) => ({
-    s: c.s,
-    x: c.x + 2 * Math.round(((k - 1) * (c.x + c.s / 2 - CX)) / 2),
-    y: c.y + 2 * Math.round(((k - 1) * (c.y + c.s / 2 - CY)) / 2),
-  }));
-  const touch = (a, b) => a.x <= b.x + b.s && b.x <= a.x + a.s && a.y <= b.y + b.s && b.y <= a.y + a.s;
-  function shapes(list) {
+  const EPS = 1e-6, STAGGER = 0.12, FLIGHT = 1 - STAGGER, VIEW = { x0: -31, x1: 68, y0: -18, y1: 30 };
+  const touch = (a, b) => a.x <= b.x + b.s + EPS && b.x <= a.x + a.s + EPS && a.y <= b.y + b.s + EPS && b.y <= a.y + a.s + EPS;
+  const gapOf = (a, b) => Math.max(a.x - b.x - b.s, b.x - a.x - a.s, a.y - b.y - b.s, b.y - a.y - a.s);
+  const ease = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(2 - 2 * u, 3) / 2);
+  const at = (c, m, t) => {
+    const e = ease(Math.min(1, Math.max(0, (t - m.delay) / FLIGHT)));
+    return { s: c.s, x: m.x + (c.x - m.x) * e, y: m.y + (c.y - m.y) * e, left: 1 - e };
+  };
+
+  function tryPlan(seed) {
+    let a = seed >>> 0;
+    const rand = () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    // Each letter's cells start at random inside the letter's own strip of the panel, so the
+    // letters stay apart on the way in. A start is kept only if its flight stays clear of the
+    // cells placed so far.
+    const order = cells.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    const STEPS = 240, plan = new Array(cells.length), placed = [];
+    const strip = (c) => {
+      const k = 'LInA'.indexOf(c.letter), w = (VIEW.x1 - VIEW.x0) / 4;
+      return [VIEW.x0 + k * w + (k ? 1 : 0), VIEW.x0 + (k + 1) * w - (k < 3 ? 1 : 0)];
+    };
+    const fits = (c, m) => placed.every((j) => {
+      const d = cells[j], n = plan[j];
+      if (gapOf(at(c, m, 0), at(d, n, 0)) < 2) return false;
+      const t0 = Math.min(m.delay, n.delay), t1 = Math.min(1, Math.max(m.delay, n.delay) + FLIGHT);
+      for (let s = 0; s <= STEPS; s++) {
+        const t = t0 + ((t1 - t0) * s) / STEPS;
+        const p = at(c, m, t), q = at(d, n, t);
+        if (gapOf(p, q) >= 0.8) continue;
+        // Cells of one letter may meet on the way: the outline keeps them on the half-cell grid.
+        if (c.letter !== d.letter) return false;
+      }
+      return true;
+    });
+    order.forEach((i) => {
+      const c = cells[i], [a0, a1] = strip(c);
+      let pick = null;
+      for (let tries = 0; tries < 600 && !pick; tries++) {
+        const m = {
+          x: Math.round(a0 + rand() * (a1 - c.s - a0)),
+          y: Math.round(VIEW.y0 + rand() * (VIEW.y1 - c.s - VIEW.y0)),
+          delay: rand() * STAGGER,
+        };
+        m.dist = Math.hypot(c.x - m.x, c.y - m.y);
+        if (fits(c, m)) pick = m;
+      }
+      const x0 = Math.ceil(a0);
+      plan[i] = pick || { x: x0, y: VIEW.y0, delay: 0, dist: Math.hypot(c.x - x0, c.y - VIEW.y0), fallback: true };
+      placed.push(i);
+    });
+    return plan;
+  }
+  // Snapping a shape to the grid can nudge a cell by up to ¼ cell, so check the drawn frames too.
+  const touchesAcross = (use) => {
+    let n = 0;
+    for (let s = 0; s <= 400; s++) {
+      const list = layout(s / 400, use).at;
+      for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++)
+        if (cells[i].letter !== cells[j].letter && touch(list[i], list[j])) n++;
+    }
+    return n;
+  };
+  // Draw again when some cell found no clear flight or letters touch, and keep the best attempt.
+  function makePlan(seed) {
+    let best = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const p = tryPlan(seed + attempt * 7919);
+      const misses = p.filter((m) => m.fallback).length + touchesAcross(p);
+      if (!best || misses < best.misses) best = { p, misses };
+      if (!misses) break;
+    }
+    return best.p;
+  }
+  let plan = makePlan(Math.floor(Math.random() * 4294967296));
+
+  // Groups of touching cells; each is drawn from the cell nearest its place, the others snapped to it.
+  function layout(t, use = plan) {
+    const list = cells.map((c, i) => at(c, use[i], t));
     const p = list.map((_, i) => i);
     const root = (i) => (p[i] === i ? i : (p[i] = root(p[i])));
     for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) if (touch(list[i], list[j])) p[root(i)] = root(j);
-    return new Set(list.map((_, i) => root(i))).size;
+    const members = new Map();
+    list.forEach((_, i) => { const r = root(i); if (!members.has(r)) members.set(r, []); members.get(r).push(i); });
+    const groups = [...members.values()].map((ids) => {
+      const a = list[ids.reduce((b, i) => (list[i].left < list[b].left ? i : b))];
+      const ax = a.x, ay = a.y;
+      const blocks = ids.map((i) => {
+        const c = list[i];
+        const rel = { x: 2 * Math.round((c.x - ax) / 2), y: 2 * Math.round((c.y - ay) / 2), s: c.s };
+        c.x = ax + rel.x; c.y = ay + rel.y;
+        return rel;
+      });
+      return { x: ax, y: ay, blocks };
+    });
+    return { at: list, groups };
   }
 
+  const NS = 'http://www.w3.org/2000/svg';
   const svg = document.getElementById('emerge');
   const input = document.getElementById('relation');
   const out = document.getElementById('emergeCount');
-  svg.setAttribute('viewBox', '-33 -10 103 32');
-  let last = '';
+  svg.setAttribute('viewBox', '-33 -20 103 52');
+  const shape = document.createElementNS(NS, 'path');
+  shape.setAttribute('fill', CRIMSON);
+  shape.setAttribute('fill-rule', 'evenodd');
+  svg.append(shape);
+  let lastCount = 0;
   function draw() {
-    const list = layout(SPREAD - (SPREAD - 1) * (input.value / 1000));
-    const key = list.map((c) => c.x + ',' + c.y).join(';');
-    if (key === last) return;
-    last = key;
-    svg.innerHTML = `<path fill="${CRIMSON}" fill-rule="evenodd" d="${outlinePath(list, 1)}"/>` +
-      list.map((c) => `<rect class="cellline" x="${c.x}" y="${c.y}" width="${c.s}" height="${c.s}" vector-effect="non-scaling-stroke"/>`).join('');
-    const n = shapes(list);
-    const text = `${cells.length} células, ${n} ${n === 1 ? 'forma' : 'formas'}`;
+    const { groups } = layout(input.value / 1000);
+    shape.setAttribute('d', groups.map((g) => outlinePath(g.blocks, 1, 1, g.x, g.y)).join(''));
+    if (groups.length === lastCount) return;
+    lastCount = groups.length;
+    const text = `${cells.length} células, ${lastCount} ${lastCount === 1 ? 'forma' : 'formas'}`;
     out.value = text;
     input.setAttribute('aria-valuetext', text);
   }
