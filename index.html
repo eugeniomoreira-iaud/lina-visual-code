@@ -32,13 +32,19 @@
   .lockup .tagline { margin-top: .9em; font-size: clamp(12px, 1.4vw, 18px); letter-spacing: .24em; color: var(--oxblood); }
   .intro { margin: 0; font-size: 17px; line-height: 1.55; max-width: 34ch; }
 
-  /* The concept: a statement, then the figure that performs it, then the reading of it. */
+  /* The concept: definition and notation, then the figure and its reading. */
   .concept { padding-block: clamp(24px, 5vh, 56px) clamp(64px, 11vh, 120px); }
   .concept h2 {
     margin: 0; max-width: 22ch; text-wrap: balance; font-size: clamp(32px, 4.6vw, 58px); font-weight: 800;
     line-height: 1.02; letter-spacing: -.022em; color: var(--crimson);
   }
-  .concept .lead { margin: 28px 0 0; max-width: 62ch; font-size: clamp(17px, 1.55vw, 20px); line-height: 1.55; }
+  .concept-opening {
+    display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 28px clamp(32px, 5vw, 64px); margin-top: 32px; align-items: start;
+  }
+  .concept-opening p { margin: 0; font-size: clamp(17px, 1.4vw, 18px); line-height: 1.65; }
+  .concept-opening .lead { max-width: 62ch; }
+  .system-formula { margin: 28px 0 0; font-size: clamp(26px, 2.7vw, 36px); color: var(--oxblood); }
   .emerge { margin: clamp(36px, 6vh, 56px) 0 0; padding: clamp(18px, 3vw, 40px); background: var(--blush); border-radius: 22px; }
   .emerge svg { display: block; width: 100%; height: auto; overflow: visible; }
   .emerge-controls {
@@ -50,9 +56,15 @@
   .emerge-foot figcaption { margin: 0; max-width: none; font-size: inherit; }
   .emerge-foot output { font-variant-numeric: tabular-nums; min-width: 0; text-align: left; font-size: inherit; }
   .reading { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 48px; margin-top: clamp(32px, 5vh, 48px); }
-  .reading p { margin: 0; max-width: 48ch; font-size: 16px; line-height: 1.62; }
+  .reading p { margin: 0; max-width: 48ch; font-size: clamp(17px, 1.4vw, 18px); line-height: 1.65; }
+  .concept-reference { margin-top: 32px; }
+  .concept-reference p { margin: 0; max-width: 90ch; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .concept-reference a { text-underline-offset: 3px; overflow-wrap: anywhere; }
 
   .section-title { margin: 0 0 24px; font-size: 26px; font-weight: 800; color: var(--crimson); letter-spacing: -.01em; }
+  .tools-intro { margin-bottom: 32px; }
+  .tools-intro .section-title { margin-bottom: 16px; }
+  .tools-intro p { margin: 0; max-width: 68ch; font-size: clamp(17px, 1.4vw, 18px); line-height: 1.65; }
 
   /* The tools: an asymmetric trio, one door per tool. */
   .doors {
@@ -101,7 +113,9 @@
 
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; gap: 28px; }
-    .reading { grid-template-columns: 1fr; }
+    .concept-opening, .reading { grid-template-columns: 1fr; }
+    .concept-opening p, .reading p { max-width: 65ch; }
+    .system-definition { max-width: 65ch; }
     .doors { grid-template-columns: 1fr; grid-template-areas: "editor" "textures" "images"; }
     .door.editor, .door.textures { flex-direction: column; }
     .editor .preview, .textures .preview, .images .preview { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
@@ -114,9 +128,71 @@
     .emerge-controls input { grid-column: 1 / -1; grid-row: 1; }
     .emerge-controls span:last-of-type { text-align: right; }
   }
+  /* G: static identity header + full first-viewport field. */
+  body[data-concept="g"] { background: #F3B6B0; color: var(--oxblood); overflow-x: hidden; }
+  body[data-concept="g"] .wrap { max-width: none; padding-inline: clamp(20px, 4vw, 64px); }
+  body[data-concept="g"] .topnav { display: flex; justify-content: flex-end; gap: 22px; padding: 0; font-size: 12px; font-weight: 500; }
+  body[data-concept="g"] .topnav a { padding: 8px 0; text-decoration: none; }
+  body[data-concept="g"] .hero { min-height: 100svh; padding: 0 clamp(20px, 4vw, 64px) clamp(20px, 3vw, 42px); display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 0; }
+  body[data-concept="g"] .header-bar { position: static; display: grid; grid-template-columns: minmax(320px, 1.1fr) minmax(250px, .8fr) auto; align-items: center; gap: 28px; padding: 20px 0; }
+  body[data-concept="g"] .brand-header { display: flex; align-items: center; gap: 20px; min-width: 0; }
+  body[data-concept="g"] .brand-header #wordmark { display: block; width: 126px; height: auto; flex: none; }
+  body[data-concept="g"] .identity-meta .name { margin: 0; padding: 0; font-size: 11px; line-height: 1.18; font-weight: 500; }
+  body[data-concept="g"] .identity-meta .tagline { margin: 5px 0 0; padding: 0; font-size: 9px; letter-spacing: .13em; }
+  body[data-concept="g"] .header-intro { margin: 0; max-width: 39ch; font-size: 12px; line-height: 1.4; }
+  body[data-concept="g"] .dither-field { grid-column: 1; grid-row: 2; min-height: 0; height: auto; position: relative; overflow: hidden; margin: 0; border: 1px solid var(--oxblood); }
+  body[data-concept="g"] .dither-field canvas { display: block; width: 100%; height: 100%; }
+  body[data-concept="g"] .dither-field figcaption { position: absolute; left: 16px; bottom: 12px; margin: 0; color: var(--oxblood); font-size: 10px; line-height: 1; letter-spacing: .14em; text-transform: uppercase; }
+  body[data-concept="g"] .concept { padding-block: 0 clamp(64px, 9vw, 120px); background: #F3B6B0; }
+  body[data-concept="g"] .concept .section-label { margin: 0; padding: 22px 0 16px; border-top: 1px solid var(--oxblood); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+  body[data-concept="g"] .concept h2 { max-width: none; margin: 0; padding-bottom: 30px; border-bottom: 1px solid var(--oxblood); color: inherit; font-size: clamp(30px, 4vw, 52px); font-weight: 500; line-height: 1.02; }
+  body[data-concept="g"] .concept .system-formula { display: block; margin: 0; padding: 34px 0; border-bottom: 1px solid var(--oxblood); color: inherit; font-size: clamp(29px, 4vw, 54px); }
+  body[data-concept="g"] .concept-opening { grid-template-columns: 1fr 1fr; gap: 1px; margin-top: 0; background: var(--oxblood); }
+  body[data-concept="g"] .concept-opening > * { padding: 34px; background: #F3B6B0; }
+  body[data-concept="g"] .concept-opening p { margin: 0; font-size: 16px; line-height: 1.62; }
+  body[data-concept="g"] .system-definition .system-formula { display: none; }
+  body[data-concept="g"] .emerge { margin: 0; padding: clamp(28px, 5vw, 70px); border-radius: 0; color: #F3B6B0; background: var(--oxblood); }
+  body[data-concept="g"] .reading { grid-template-columns: 1fr 1fr; gap: 1px; margin: 0; background: var(--oxblood); }
+  body[data-concept="g"] .reading p { margin: 0; padding: 34px; background: #F3B6B0; font-size: 14px; line-height: 1.55; }
+  body[data-concept="g"] .concept-reference { margin: 0; padding-top: 22px; }
+  body[data-concept="g"] .tools-section { padding-block: clamp(60px, 8vw, 112px); background: var(--paper); color: var(--oxblood); }
+  body[data-concept="g"] .tools-intro { display: grid; grid-template-columns: 1fr 2fr; gap: 32px; margin-bottom: 42px; }
+  body[data-concept="g"] .tools-intro p { margin: 0; max-width: 62ch; font-size: 16px; line-height: 1.62; }
+  body[data-concept="g"] .doors { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "editor textures images"; gap: 12px; }
+  body[data-concept="g"] .door, body[data-concept="g"] .door.editor, body[data-concept="g"] .door.textures, body[data-concept="g"] .door.images { display: flex; flex-direction: column; border-radius: 0; color: inherit; }
+  body[data-concept="g"] .door .preview, body[data-concept="g"] .editor .preview, body[data-concept="g"] .textures .preview, body[data-concept="g"] .images .preview { flex: none; min-height: 0; aspect-ratio: 4 / 3; }
+  body[data-concept="g"] .door .body { padding: 20px 18px 26px; gap: 9px; }
+  body[data-concept="g"] .door h3 { color: inherit; font-size: 18px; font-weight: 500; }
+  body[data-concept="g"] .door p { font-size: 13px; line-height: 1.5; }
+  body[data-concept="g"] .door .go { margin: 5px 0 0; padding: 0 0 3px; border-radius: 0; background: transparent; color: inherit; font-size: 12px; border-bottom: 1px solid currentColor; }
+  body[data-concept="g"] .rules { padding-block: clamp(64px, 9vw, 120px); background: #171717; color: var(--paper); }
+  body[data-concept="g"] .rules > p { color: inherit; opacity: .72; font-size: 14px; }
+  body[data-concept="g"] .rule-grid { gap: 1px; background: var(--paper); }
+  body[data-concept="g"] .rule-grid figure { padding: 18px; background: var(--blush); color: var(--oxblood); }
+  body[data-concept="g"] .rule-grid svg { border-radius: 0; }
+  @media (max-width: 900px) {
+    body[data-concept="g"] .header-bar { grid-template-columns: 1fr auto; gap: 8px 16px; padding: 14px 0; }
+    body[data-concept="g"] .brand-header { gap: 12px; }
+    body[data-concept="g"] .brand-header #wordmark { width: 94px; }
+    body[data-concept="g"] .identity-meta .name { display: none; }
+    body[data-concept="g"] .header-intro { grid-column: 1 / -1; grid-row: 2; max-width: 45ch; font-size: 11px; }
+    body[data-concept="g"] .topnav { grid-column: 2; grid-row: 1; }
+    body[data-concept="g"] .concept-opening, body[data-concept="g"] .reading { grid-template-columns: 1fr; }
+    body[data-concept="g"] .concept-opening > * { padding: 24px 0; }
+    body[data-concept="g"] .reading p { padding: 24px 0; }
+    body[data-concept="g"] .tools-intro { grid-template-columns: 1fr; }
+    body[data-concept="g"] .doors { grid-template-columns: 1fr; grid-template-areas: "editor" "textures" "images"; }
+    body[data-concept="g"] .door { border-right: 0; }
+    body[data-concept="g"] .rule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 560px) {
+    body[data-concept="g"] .brand-header #wordmark { width: 82px; }
+    body[data-concept="g"] .topnav { gap: 13px; font-size: 11px; }
+    body[data-concept="g"] .rule-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
-<body>
+<body data-concept="g">
 
 <nav class="wrap topnav" aria-label="Ferramentas">
   <a href="grid.html">Células</a>
@@ -135,8 +211,20 @@
 
 <main>
   <section class="wrap concept" aria-labelledby="conceptTitle">
-    <h2 class="foot" id="conceptTitle">O grupo é a propriedade que emerge</h2>
-    <p class="lead foot">A marca do LINA parte da ideia de sistema da Teoria Geral dos Sistemas, de Ludwig von Bertalanffy. Um conjunto de partes é apenas um agregado enquanto cada parte continua a ser o que era sozinha. Ele se torna um sistema quando, da relação entre as partes, surge uma propriedade que nenhuma delas tem isoladamente: uma propriedade partilhada.</p>
+    <h2 class="foot" id="conceptTitle">Das relações, o grupo</h2>
+    <div class="concept-opening foot">
+      <p class="lead">A identidade visual expressa uma concepção sistêmica do trabalho coletivo: o grupo se constitui pelas relações entre seus integrantes e pelas propriedades que passam a compartilhar. Essa perspectiva dialoga com a Teoria Geral dos Sistemas, de Ludwig von Bertalanffy, e encontra uma formulação específica na definição de Avenir Uyemov, apresentada por Jorge de Albuquerque Vieira em seus estudos sobre sistemas.</p>
+      <div class="system-definition">
+        <p>Nessa definição, um agregado de elementos (<var>m</var>), de qualquer natureza, constitui um sistema <var>S</var> quando existem relações <var>R</var> entre eles pelas quais compartilham determinadas propriedades <var>P</var>.</p>
+        <math class="system-formula" display="block" aria-label="O agregado m constitui um sistema S, por definição, quando as relações R entre seus elementos permitem compartilhar propriedades P.">
+          <mrow>
+            <mo>(</mo><mi>m</mi><mo>)</mo><mi>S</mi>
+            <msub><mo>=</mo><mtext>df</mtext></msub>
+            <mo>[</mo><mi>R</mi><mo>(</mo><mi>m</mi><mo>)</mo><mo>]</mo><mi>P</mi>
+          </mrow>
+        </math>
+      </div>
+    </div>
 
     <figure class="emerge">
       <svg id="emerge" aria-hidden="true"></svg>
@@ -152,13 +240,19 @@
     </figure>
 
     <div class="reading foot">
-      <p>No logotipo, a parte é a célula: um quadrado do tamanho do pé do L. Sozinha, ela é um indivíduo, com os quatro cantos livres arredondados para fora. Quando encontra outra célula, os cantos que se tocam se curvam para dentro e as duas passam a ter um único contorno. Esse contorno não pertence a nenhuma delas. Ele pertence à relação.</p>
-      <p>Com a mesma célula e a mesma regra surgem as letras e, das letras, a palavra. O que emerge no fim é o próprio grupo: o LINA, um laboratório de pessoas que, em relação, produzem o que nenhuma produziria sozinha. As ferramentas abaixo seguem a mesma regra, então tudo o que elas desenham nasce assim, de células em relação.</p>
+      <p>Na marca, esse princípio orienta a própria construção das formas. A célula é a unidade que compõe o logotipo. Suas conexões determinam o desenho dos contornos: os cantos livres recebem curvas convexas; os encontros entre células, curvas côncavas. Dessa organização resultam as letras e a configuração que permite reconhecer o conjunto como LINA.</p>
+      <p>O desenho traduz, assim, uma ideia de pertencimento. Cada célula participa de uma forma cuja identidade depende de sua relação com as demais. No laboratório, essa dimensão coletiva se realiza no encontro entre pessoas, conhecimentos e práticas. A marca dá expressão visual ao grupo como propriedade emergente dessas relações.</p>
+    </div>
+    <div class="concept-reference foot">
+      <p>Referência: VIEIRA, Jorge de Albuquerque. ORGANIZAÇÃO E SISTEMAS. <cite>Informática na educação teoria &amp; prática</cite>, Porto Alegre, v. 3, n. 1, 2000. DOI: <a href="https://doi.org/10.22456/1982-1654.6363">10.22456/1982-1654.6363</a>.</p>
     </div>
   </section>
 
   <section class="wrap" aria-labelledby="toolsTitle">
-    <h2 class="section-title foot" id="toolsTitle">Ferramentas</h2>
+    <div class="tools-intro foot">
+      <h2 class="section-title" id="toolsTitle">Ferramentas</h2>
+      <p>As ferramentas desta página estendem esse princípio à criação de novas composições. Desenhos, texturas e imagens são produzidos com a mesma unidade e as mesmas regras de conexão, preservando a continuidade entre o logotipo e suas aplicações.</p>
+    </div>
     <div class="doors">
       <article class="door editor">
         <div class="preview"><svg id="editorPreview" viewBox="0 0 44 34" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
@@ -214,6 +308,53 @@
   </section>
 </main>
 
+<script>
+// G: static header + animated dither field. Reduced motion draws one stable frame.
+(function () {
+  const hero = document.querySelector('.hero'), nav = document.querySelector('.topnav');
+  const lockup = document.querySelector('.lockup'), wordmark = lockup.querySelector('#wordmark');
+  const identity = document.createElement('div'); identity.className = 'identity-meta';
+  identity.append(lockup.querySelector('.name'), lockup.querySelector('.tagline'));
+  const brand = document.createElement('div'); brand.className = 'brand-header'; brand.append(wordmark, identity);
+  const intro = document.querySelector('.intro'); intro.className = 'header-intro';
+  const header = document.createElement('div'); header.className = 'header-bar'; header.append(brand, intro, nav);
+  const field = document.createElement('figure'); field.className = 'dither-field';
+  field.setAttribute('aria-label', 'Campos cromáticos em retícula que mudam lentamente de forma');
+  field.innerHTML = '<canvas aria-hidden="true"></canvas><figcaption>célula / campo / relação / forma</figcaption>';
+  lockup.remove(); hero.prepend(header); hero.append(field);
+
+  const canvas = field.querySelector('canvas'), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+  function draw(time = 0) {
+    const box = field.getBoundingClientRect(), ratio = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.max(320, Math.round(box.width)), h = Math.max(260, Math.round(box.height));
+    canvas.width = w * ratio; canvas.height = h * ratio;
+    const ctx = canvas.getContext('2d'); ctx.scale(ratio, ratio);
+    const wash = ctx.createLinearGradient(0, 0, w, h);
+    wash.addColorStop(0, '#F7D9D4'); wash.addColorStop(.5, '#F3B6B0'); wash.addColorStop(1, '#CF7773');
+    ctx.fillStyle = wash; ctx.fillRect(0, 0, w, h);
+    const cell = w < 600 ? 9 : 11, t = time * .00018;
+    const blob = (x, y, cx, cy, sx, sy) => Math.exp(-(((x - cx) / sx) ** 2 + ((y - cy) / sy) ** 2));
+    for (let y = 0, row = 0; y < h + cell; y += cell, row++) for (let x = 0, col = 0; x < w + cell; x += cell, col++) {
+      const nx = x / w, ny = y / h;
+      const a = blob(nx, ny, .3 + .16 * Math.sin(t * 1.1), .45 + .18 * Math.cos(t * .8), .25, .32);
+      const b = blob(nx, ny, .72 + .13 * Math.cos(t * .65), .56 + .2 * Math.sin(t * 1.05), .3, .24);
+      const c = blob(nx, ny, .48 + .2 * Math.sin(t * .48 + 2), .2 + .1 * Math.cos(t * .9), .2, .18);
+      const tone = Math.min(1, .06 + a * .8 + b * .74 + c * .5);
+      if (tone * 16 <= bayer[row % 4][col % 4]) continue;
+      ctx.fillStyle = a + c > b ? '#520000' : '#9B0A0E';
+      const size = cell * (.26 + tone * .65), inset = (cell - size) / 2;
+      ctx.beginPath(); ctx.roundRect(x + inset, y + inset, size, size, size * .23); ctx.fill();
+    }
+  }
+  new ResizeObserver(() => draw(0)).observe(field);
+  if (!reduced) {
+    let last = 0;
+    const animate = time => { if (time - last > 40) { draw(time); last = time; } requestAnimationFrame(animate); };
+    requestAnimationFrame(animate);
+  }
+})();
+</script>
 <script src="lina-geometry.js"></script>
 <script src="lina-texture.js"></script>
 <script src="lina-image.js"></script>
