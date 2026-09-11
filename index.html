@@ -289,7 +289,8 @@
       if (tone * 16 <= bayer[row % 4][col % 4]) continue;
       ctx.fillStyle = noise(x / (S * 1.7) + 31.7, y / (S * 1.7) - 17.3, t * .7) > 0 ? '#520000' : '#9B0A0E';
       const size = cell * (.26 + tone * .65), inset = (cell - size) / 2;
-      ctx.beginPath(); ctx.roundRect(x + inset, y + inset, size, size, size * .23); ctx.fill();
+      // fixed ¼-pitch radius; small dots become circles
+      ctx.beginPath(); ctx.roundRect(x + inset, y + inset, size, size, Math.min(size / 2, cell / 4)); ctx.fill();
     }
   }
   new ResizeObserver(() => draw(0)).observe(field);
