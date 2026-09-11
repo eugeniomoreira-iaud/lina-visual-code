@@ -1,16 +1,14 @@
 /*
   LINA image filter: turns a photo into LINA geometry.
 
-  Units: 1 unit = ¼ cell. The photo becomes a darkness map. Each screen tile
-  picks a square dot from a ladder of sizes in half-cell steps. This is the one
-  tool where blocks vary in size. Dots never share an edge, but separate dots
-  may sit ¼ cell apart, like the letters of the wordmark. The darkest tones can
-  fuse into solids. Dots are at least a whole cell, with one opt-in exception:
-  the half-cell dot, which the corner rule turns into a circle, the way the
-  A's crossbar is half a cell.
+  Units: 1 unit = ¼ cell. The photo becomes a darkness map. Dither is the landing
+  banner's pattern toned by the photo, the one filter outside the rule: its dots vary
+  in size. Bitmap keeps to the rule.
 */
 (function (root) {
   'use strict';
+
+  const Geo = root.LinaGeometry;
 
   const PALETTES = [
     { name: 'Carmim sobre branco', bg: '#FFFFFF', fg: '#9B0A0E' },
@@ -22,12 +20,12 @@
   ];
 
   const DEFAULTS = {
-    mode: 'halftone', detail: 84, screen: 3, halfDots: true, stagger: false, merge: false,
-    direction: 'vertical', stemGap: 1, dither: 'diffusion',
+    mode: 'dither', detail: 84,
+    dither: 'diffusion',
     brightness: 0, contrast: 0, midtones: 0.35, cutoff: 0.08, smooth: 0.3, invert: false, radius: 0.25,
   };
 
-  const CELL = 4, HALF = 2;
+  const CELL = 4;
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
   /* ---------- source ---------- */
@@ -110,156 +108,61 @@
     return out;
   }
 
-  // Only whole dots are drawn, so the frame edge never cuts a dot into a sliver.
-  function fill(bits, U, V, x, y, w, h) {
-    if (x < 0 || y < 0 || x + w > U || y + h > V) return;
-    for (let j = y; j < y + h; j++) bits.fill(1, j * U + x, j * U + x + w);
-  }
-
-  // Square dots in half-cell steps, from one cell up to half a cell short of the tile,
-  // so neighbours never touch. The half-cell dot is the opt-in exception.
-  function dotLadder(T, half, r) {
-    const sizes = [[0, 0]];
-    if (half) sizes.push([HALF, HALF]);
-    for (let s = CELL; s <= T - HALF; s += HALF) sizes.push([s, s]);
-    const cov = sizes.map(([w, h]) => (!w ? 0 : Math.min(1, (w * h - (4 - Math.PI) * r * r) / (T * T))));
-    return { sizes, cov };
-  }
-
   /* ---------- filters ---------- */
 
-  function halftone(src, p) {
-    const T = Math.max(CELL + HALF, Math.round(p.screen * CELL));
+  // The landing banner's pattern, toned by the photo, one tile per cell. Dark tiles become solid
+  // cells whose union is traced by the rule; below that the rim is Bayer-dithered into cells
+  // meeting at corners, and a band of mid-dark tones draws one-cell lines along the image's
+  // contours. Other tiles hold a dot sized by the tone, the banner's declared exception; next to
+  // a solid a dot stays at half a cell, so the gap to the solid stays ¼ cell.
+  function dither(src, p) {
+    const SOLID = 0.9, BRIDGE = 0.72, LINE = 0.62;
     const nx = Math.max(4, Math.round(p.detail));
     const ny = Math.max(1, Math.round((nx * src.h) / src.w));
-    const U = nx * T, V = ny * T;
-    const tone = sampler(src, U, V, p);
-    const shift = p.stagger ? T >> 1 : 0;
-    const cols = nx + (shift ? 1 : 0);
-    const xAt = (i, j) => i * T - (j & 1 ? shift : 0);
-
-    const raw = new Float32Array(cols * ny);
-    for (let j = 0; j < ny; j++)
-      for (let i = 0; i < cols; i++) raw[j * cols + i] = tone(xAt(i, j), j * T, T, T);
-
-    const { sizes, cov } = dotLadder(T, p.halfDots, p.radius * CELL);
-    // Full black maps to the biggest dot, so dark tones keep their differences.
-    const top = cov[cov.length - 1];
-    const t = raw.map((v) => v * top);
-    const levels = quantize(cols, ny, t, cov, p.dither);
-
-    // Solid: the darkest tones fill their tile and fuse.
-    const solidFrom = p.merge ? 0.93 : 2;
-    let edgeRoom = shift ? Math.min(T - shift, shift) - 1 : 0;
-    edgeRoom -= edgeRoom & 1;
-
-    const dots = new Array(levels.length).fill(null);
-    for (let k = 0; k < levels.length; k++) {
-      const i = k % cols, j = (k - i) / cols;
-      let s = sizes[levels[k]][0], kind = 0;
-      if (raw[k] >= solidFrom) { s = T; kind = 2; }
-      if (!s) continue;
-      const tx = xAt(i, j), ty = j * T;
-      let x = tx + ((T - s) >> 1), y = ty + ((T - s) >> 1);
-      if (x < 0 || x + s > U) {
-        // Staggered rows start and end with half a tile: fit the biggest square that leaves a gap.
-        if (s > edgeRoom) { s = edgeRoom >= CELL ? edgeRoom : p.halfDots && edgeRoom >= HALF ? HALF : 0; kind = 0; }
-        if (!s) continue;
-        x = x < 0 ? 0 : U - s;
+    const U = nx * CELL, V = ny * CELL, N = nx * ny;
+    const sample = sampler(src, U, V, p);
+    const tone = new Float32Array(N);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) tone[j * nx + i] = sample(i * CELL, j * CELL, CELL, CELL);
+    const at = (i, j) => tone[clamp(j, 0, ny - 1) * nx + clamp(i, 0, nx - 1)];
+    const mod = (a, n) => ((a % n) + n) % n;
+    const solid = new Uint8Array(N);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i, t = tone[k];
+      let s = t >= SOLID || (t - BRIDGE) / (SOLID - BRIDGE) > BAYER[(j & 3) * 4 + (i & 3)];
+      if (!s && t >= LINE) {
+        // Lines run along the contour, across the tone gradient.
+        const gx = at(i + 1, j) - at(i - 1, j), gy = at(i, j + 1) - at(i, j - 1);
+        const [a, b] = Math.abs(gx) > 2 * Math.abs(gy) ? [j, i] : Math.abs(gy) > 2 * Math.abs(gx) ? [i, j] : gx * gy > 0 ? [i, i + j] : [i, i - j];
+        s = mod(b, 3) === 0 && mod(a + 2 * Math.floor(b / 3), 4) < 2 + Math.floor((t - LINE) / 0.06);
       }
-      if (y < 0 || y + s > V) continue;
-      dots[k] = { x, y, s, kind, tx, ty };
+      solid[k] = s ? 1 : 0;
     }
-    resolveContacts(dots, cols, ny, T, U);
-
-    const bits = new Uint8Array(U * V);
-    for (const d of dots) if (d) fill(bits, U, V, d.x, d.y, d.s, d.s);
-    return { bits, U, V, label: `${nx} × ${ny} pontos` };
-  }
-
-  // Dots may share an edge only when both are solid. Any other side contact shrinks
-  // the plainer dot by half a cell, recentred in its tile, until a gap opens.
-  function resolveContacts(dots, cols, rows, T, U) {
-    const touching = (a, b) => {
-      const ox = a.x < b.x + b.s && b.x < a.x + a.s, oy = a.y < b.y + b.s && b.y < a.y + a.s;
-      if (ox && oy) return true;
-      if (oy && (a.x + a.s === b.x || b.x + b.s === a.x)) return true;
-      return ox && (a.y + a.s === b.y || b.y + b.s === a.y);
+    const size = new Float32Array(N);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i, t = tone[k];
+      if (solid[k] || t <= BAYER[(j & 3) * 4 + (i & 3)]) continue;
+      let s = 0.26 + t * 0.65;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        const ii = i + di, jj = j + dj;
+        if (ii >= 0 && jj >= 0 && ii < nx && jj < ny && solid[jj * nx + ii]) s = Math.min(s, 0.5);
+      }
+      size[k] = s;
+    }
+    const f = (v) => Math.round(v * 1000) / 1000;
+    const draw = (radius, scale) => {
+      const C = CELL * scale;
+      let d = Geo.traceBitmap(solid, nx, ny, radius, { scale: C });
+      for (let k = 0; k < N; k++) {
+        if (!size[k]) continue;
+        const i = k % nx, j = (k - i) / nx, s = size[k] * C, r = f(Math.min(s / 2, radius * C));
+        const x = i * C + (C - s) / 2, y = j * C + (C - s) / 2;
+        d += `M${f(x + r)} ${f(y)}H${f(x + s - r)}A${r} ${r} 0 0 1 ${f(x + s)} ${f(y + r)}` +
+          `V${f(y + s - r)}A${r} ${r} 0 0 1 ${f(x + s - r)} ${f(y + s)}H${f(x + r)}` +
+          `A${r} ${r} 0 0 1 ${f(x)} ${f(y + s - r)}V${f(y + r)}A${r} ${r} 0 0 1 ${f(x + r)} ${f(y)}Z`;
+      }
+      return d;
     };
-    const shrink = (d) => {
-      d.s = d.s > T - HALF ? T - HALF : d.s - HALF;
-      if (d.s < CELL) { d.s = 0; return; }
-      d.x = Math.min(Math.max(0, d.tx + ((T - d.s) >> 1)), U - d.s);
-      d.y = d.ty + ((T - d.s) >> 1);
-      d.kind = 0;
-    };
-    for (let pass = 0; pass < 4; pass++) {
-      let changed = false;
-      for (let k = 0; k < dots.length; k++) {
-        const a = dots[k];
-        if (!a || !a.s) continue;
-        const i = k % cols, j = (k - i) / cols;
-        for (let dj = 0; dj <= 1; dj++) {
-          for (let di = dj ? -1 : 1; di <= 1; di++) {
-            const ii = i + di, jj = j + dj;
-            if (ii < 0 || ii >= cols || jj >= rows) continue;
-            const b = dots[jj * cols + ii];
-            if (!b || !b.s || (a.kind === 2 && b.kind === 2) || !touching(a, b)) continue;
-            shrink(a.kind < b.kind ? a : b);
-            changed = true;
-          }
-        }
-      }
-      if (!changed) break;
-    }
-    for (let k = 0; k < dots.length; k++) if (dots[k] && !dots[k].s) dots[k] = null;
-  }
-
-  // Stems one cell wide, ¼ or ½ cell apart. Each window along a stem holds one run,
-  // in half-cell lengths, so runs in one stem stay half a cell apart.
-  function stems(src, p) {
-    const W = Math.max(CELL + HALF, Math.round(p.screen * CELL));
-    const g = p.stemGap >= 2 ? HALF : 1;
-    const P = CELL + g;
-    const vertical = p.direction !== 'horizontal';
-    const n = Math.max(4, Math.round(p.detail));
-    const A = n * P - g;
-    const aspect = vertical ? src.h / src.w : src.w / src.h;
-    const m = Math.max(1, Math.round((A * aspect) / W));
-    const B = m * W;
-    const U = vertical ? A : B, V = vertical ? B : A;
-    const tone = sampler(src, U, V, p);
-    const shift = p.stagger ? W >> 1 : 0;
-    const wins = m + (shift ? 1 : 0);
-    const at = (a, b) => b * W - (a & 1 ? shift : 0);
-
-    const t = new Float32Array(n * wins);
-    for (let b = 0; b < wins; b++) {
-      for (let a = 0; a < n; a++) {
-        const s = at(a, b);
-        t[b * n + a] = vertical ? tone(a * P, s, CELL, W) : tone(s, a * P, W, CELL);
-      }
-    }
-
-    const r = p.radius * CELL;
-    const max = p.merge ? W : W - HALF;
-    const lens = [0];
-    if (p.halfDots) lens.push(HALF);
-    for (let l = CELL; l <= max; l += HALF) lens.push(l);
-    const cov = lens.map((l) => (!l ? 0 : l === W ? 1 : (CELL * l - (4 - Math.PI) * r * r) / (CELL * W)));
-    const top = cov[cov.length - 1];
-    for (let k = 0; k < t.length; k++) t[k] *= top;
-
-    const levels = quantize(n, wins, t, cov, p.dither);
-    const bits = new Uint8Array(U * V);
-    for (let k = 0; k < levels.length; k++) {
-      const len = lens[levels[k]];
-      if (!len) continue;
-      const a = k % n, b = (k - a) / n, s = at(a, b);
-      if (vertical) fill(bits, U, V, a * P, s, CELL, len);
-      else fill(bits, U, V, s, a * P, len, CELL);
-    }
-    return { bits, U, V, label: `${n} hastes` };
+    return { U, V, draw, label: `${nx} × ${ny} células` };
   }
 
   // Two tones. Without dithering the edge follows the image at half-cell precision,
@@ -301,12 +204,17 @@
     return { bits, U, V, label: `${cw} × ${ch} células` };
   }
 
-  const FILTERS = { halftone, stems, bitmap };
+  const FILTERS = { dither, bitmap };
 
   function process(src, options) {
     const p = Object.assign({}, DEFAULTS, options);
-    return (FILTERS[p.mode] || halftone)(src, p);
+    return (FILTERS[p.mode] || dither)(src, p);
   }
 
-  root.LinaImage = { PALETTES, DEFAULTS, prepare, process, CELL };
+  // A result's outline in output units times `scale`, corners rounded by `radius` cells.
+  function outline(res, radius, scale = 1) {
+    return res.draw ? res.draw(radius, scale) : Geo.traceBitmap(res.bits, res.U, res.V, radius * CELL, { scale });
+  }
+
+  root.LinaImage = { PALETTES, DEFAULTS, prepare, process, outline, CELL };
 })(typeof window !== 'undefined' ? window : globalThis);

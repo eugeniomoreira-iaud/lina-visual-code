@@ -42,7 +42,7 @@
     <div class="seg grid2" data-key="mode">
       <button type="button" data-value="scatter">Dispersão</button>
       <button type="button" data-value="field">Campo</button>
-      <button type="button" data-value="stems">Hastes</button>
+      <button type="button" data-value="dither">Pontilhado</button>
       <button type="button" data-value="glyphs">Glifos</button>
     </div>
     <p class="hint" id="modeHint"></p>
@@ -65,7 +65,7 @@
     <p class="hint" id="blankActual"></p>
   </fieldset>
 
-  <div data-mode-not="glyphs">
+  <div data-mode-not="glyphs dither">
   <fieldset>
     <legend><label for="steps">Meios passos</label></legend>
     <div class="range-row">
@@ -76,7 +76,7 @@
   </fieldset>
   </div>
 
-  <div data-mode-not="glyphs field">
+  <div data-mode-not="glyphs field dither">
   <fieldset>
     <legend><label for="quarter">Vãos de ¼</label></legend>
     <div class="range-row">
@@ -97,7 +97,7 @@
     </fieldset>
   </div>
 
-  <div data-mode="field">
+  <div data-mode="field dither">
     <fieldset>
       <legend><label for="grain">Grão</label></legend>
       <div class="range-row">
@@ -111,31 +111,6 @@
         <input id="stretch" data-num="stretch" type="range" min="-100" max="100" step="1">
         <output data-out="stretch"></output>
       </div>
-    </fieldset>
-  </div>
-
-  <div data-mode="stems">
-    <fieldset>
-      <legend>Direção</legend>
-      <div class="seg" data-key="direction">
-        <button type="button" data-value="vertical">Vertical</button>
-        <button type="button" data-value="horizontal">Horizontal</button>
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>Largura do vão</legend>
-      <div class="seg" data-key="gutterWidth">
-        <button type="button" data-value="1">¼ de célula</button>
-        <button type="button" data-value="2">½ célula</button>
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend><label for="gutter">Vãos</label></legend>
-      <div class="range-row">
-        <input id="gutter" data-num="gutter" type="range" min="0" max="100" step="1">
-        <output data-out="gutter"></output>
-      </div>
-      <p class="hint">Parcela das hastes vizinhas mantidas separadas em vez de fundidas.</p>
     </fieldset>
   </div>
 
@@ -245,7 +220,7 @@
 
   <div class="notes">
     <p>Pressione <kbd>R</kbd> para uma nova semente. A mesma semente com os mesmos ajustes sempre gera a mesma textura, e a barra de endereço guarda todos eles.</p>
-    <p>Todo padrão é feito de células inteiras, por isso segue a mesma regra de cantos do logotipo.</p>
+    <p>Os padrões são feitos de células inteiras e seguem a regra de cantos do logotipo. O Pontilhado é a exceção: seus pontos variam de tamanho, como no banner da página inicial.</p>
   </div>
 </aside>
 
@@ -266,7 +241,7 @@ const FORMATS = { '1:1': [1, 1], '4:5': [4, 5], '16:9': [16, 9], '9:16': [9, 16]
 const MODE_HINTS = {
   scatter: 'Células ao acaso. A aglomeração as liga em trilhas.',
   field: 'Ruído suave recortado em células inteiras. O grão define o tamanho das ilhas.',
-  stems: 'Barras de uma célula de largura e comprimentos aleatórios, como no logotipo.',
+  dither: 'Pontos que crescem com o tom de um ruído suave, como no banner da página inicial. Nos tons escuros viram células unidas, com pontes em diagonal e linhas. A cor de destaque pinta regiões inteiras.',
   glyphs: 'As letras L, I, n e A, compostas lado a lado como tipos.',
 };
 const EDGE_HINTS = {
@@ -277,7 +252,7 @@ const EDGE_HINTS = {
 
 const DEFAULTS = {
   mode: 'field', seed: 2718, blank: 50, steps: 50,
-  clump: 60, grain: 5, stretch: 0, direction: 'vertical', gutter: 40, gutterWidth: '1', quarter: 30,
+  clump: 60, grain: 5, stretch: 0, quarter: 30,
   rotate: true, glyphSize: '1', gap: '1', wL: 25, wI: 25, wn: 25, wA: 25,
   format: '1:1', size: 40, edges: 'bleed', radius: 0.25, pinholes: true, repeat: false,
   palette: 0, accent: 15, transparent: false,
@@ -328,7 +303,7 @@ function engineOptions(scale = 1) {
     mode: p.mode, seed: p.seed | 0, cols, rows, edges: p.edges,
     blank: p.blank / 100, steps: p.steps / 100, radius: p.radius, pinholes: p.pinholes,
     accent: p.accent / 100, clump: p.clump / 100, grain: p.grain, stretch: p.stretch / 100,
-    direction: p.direction, gutter: p.gutter / 100, gutterWidth: Number(p.gutterWidth), quarter: p.quarter / 100,
+    quarter: p.quarter / 100,
     rotate: p.rotate, glyphSize: Number(p.glyphSize), gap: Number(p.gap),
     weights: { L: p.wL, I: p.wI, n: p.wn, A: p.wA }, scale,
   };
@@ -375,7 +350,7 @@ function draw() {
 /* ---------- controls ---------- */
 
 const FORMAT_OUT = {
-  steps: (v) => v + '%', clump: (v) => v + '%', gutter: (v) => v + '%', accent: (v) => v + '%', quarter: (v) => v + '%',
+  steps: (v) => v + '%', clump: (v) => v + '%', accent: (v) => v + '%', quarter: (v) => v + '%',
   wL: (v) => v + '%', wI: (v) => v + '%', wn: (v) => v + '%', wA: (v) => v + '%',
   grain: (v) => String(v).replace('.', ',') + (v === 1 ? ' célula' : ' células'),
   stretch: (v) => (v === 0 ? 'Nenhum' : v > 0 ? `Alto ${v}` : `Largo ${-v}`),
@@ -390,7 +365,7 @@ function syncControls() {
   document.querySelectorAll('[data-num]').forEach((input) => { input.value = p[input.dataset.num]; });
   document.querySelectorAll('[data-bool]').forEach((input) => { input.checked = !!p[input.dataset.bool]; });
   document.querySelectorAll('[data-out]').forEach((o) => { o.value = FORMAT_OUT[o.dataset.out](p[o.dataset.out]); });
-  document.querySelectorAll('[data-mode]').forEach((box) => { box.hidden = box.dataset.mode !== p.mode; });
+  document.querySelectorAll('[data-mode]').forEach((box) => { box.hidden = !box.dataset.mode.split(' ').includes(p.mode); });
   document.querySelectorAll('[data-mode-not]').forEach((box) => { box.hidden = box.dataset.modeNot.split(' ').includes(p.mode); });
   document.querySelectorAll('#palettes button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === p.palette)));
   $('#seed').value = p.seed;
@@ -503,6 +478,7 @@ $('#link').addEventListener('click', () => copyText(location.href, 'Link copiado
 
 $('#mark').innerHTML = `<path fill="#9B0A0E" d="${LinaGeometry.outlinePath(LinaGeometry.LETTERS.L.blocks, 0.5)}"/>`;
 if (!readHash()) readStore();
+if (!MODE_HINTS[p.mode]) p.mode = DEFAULTS.mode; // old links may name the retired stems mode
 update();
 </script>
 </body>

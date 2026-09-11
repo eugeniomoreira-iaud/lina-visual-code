@@ -1,5 +1,5 @@
 /*
-  LINA textures: seeded patterns that obey the LINA geometry.
+  LINA textures: seeded patterns that obey the LINA geometry (all but dither, the banner's exception).
 
   Units: 1 unit = ¼ cell. A cell is 4×4 units, a half cell 2×2.
   Blocks are always cell-sized. Anything that connects (touches or overlaps)
@@ -24,7 +24,7 @@
   const DEFAULTS = {
     mode: 'field', seed: 1, cols: 48, rows: 48, edges: 'bleed',
     blank: 0.5, steps: 0.5, quarter: 0.3, radius: 0.25, pinholes: true, accent: 0.15,
-    clump: 0.6, grain: 5, stretch: 0, direction: 'vertical', gutter: 0.4, gutterWidth: 1,
+    clump: 0.6, grain: 5, stretch: 0,
     rotate: true, glyphSize: 1, gap: 1, weights: { L: 1, I: 1, n: 1, A: 1 },
     scale: 1, tiles: 1,
   };
@@ -211,55 +211,6 @@
     fitBlank(F, p.blank, 0, 1, build);
   }
 
-  // Bars one cell wide, laid in columns, with random lengths and gaps.
-  // Gutters between columns are ¼ or ½ cell wide. A column with a gutter on both
-  // sides is its own shape, so its runs may also be ¼ cell apart.
-  function stems(F, p, seed) {
-    const rng = rngFor(seed, 3);
-    const vertical = p.direction !== 'horizontal';
-    const A = vertical ? F.GW : F.GH;
-    const B = vertical ? F.GH : F.GW;
-    const gw = p.gutterWidth >= 2 ? HALF : 1;
-    const put = (a, b, len) => (vertical ? fillRect(F, a, b, CELL, len) : fillRect(F, b, a, len, CELL));
-
-    const cols = [];
-    let a = 0, leftGutter = true;
-    while (F.wrap ? a < A : a + CELL <= A) {
-      const u = new Float32Array(B * 2 + 16);
-      for (let i = 0; i < u.length; i++) u[i] = rng();
-      const rightGutter = rng() < p.gutter;
-      cols.push({ a, u, free: leftGutter && rightGutter });
-      a += CELL + (rightGutter ? gw : 0);
-      leftGutter = rightGutter;
-    }
-
-    // q < 0 merges runs (less blank), q > 0 lengthens gaps (more blank).
-    const build = (q) => {
-      F.bits.fill(0);
-      const qp = Math.max(0, q), merge = Math.max(0, -q);
-      const solidSpan = 1 + Math.round(4 * (1 - qp));
-      const gapSpan = 1 + 20 * qp * qp;
-      for (const { a, u, free } of cols) {
-        let k = 0;
-        let b = -CELL * Math.floor(u[k++] * 4) - (u[k++] < p.steps ? HALF : 0);
-        const end = F.wrap ? b + B : B;
-        while (b < end && k < u.length - 8) {
-          const len = CELL * (1 + Math.floor(u[k++] * solidSpan)) + (u[k++] < p.steps ? HALF : 0);
-          if (F.wrap) put(a, b, len);
-          else {
-            const s = Math.max(0, b), e = Math.min(B, b + len);
-            if (e - s >= CELL) put(a, s, e - s);
-          }
-          b += len;
-          let gap = Math.max(HALF, CELL * (1 + Math.floor(u[k++] * gapSpan)) - (u[k++] < p.steps ? HALF : 0));
-          if (free && u[k++] < p.quarter) gap = Math.max(1, gap - 1);
-          if (u[k++] >= merge) b += gap;
-        }
-      }
-    };
-    fitBlank(F, p.blank, -1, 1, build);
-  }
-
   // The wordmark letters in all eight orientations, in quarter units
   // (a half-cell block becomes 2k × 2k units), each with a halo `gap` units wide.
   const glyphCache = new Map();
@@ -388,7 +339,111 @@
     }
   }
 
-  const GENERATORS = { scatter, field: fieldMode, stems, glyphs };
+  const GENERATORS = { scatter, field: fieldMode, glyphs };
+
+  /* ---------- dither: the landing banner's field, as a texture ---------- */
+
+  // One tile per cell, toned by smooth noise. Dark tiles become solid cells whose union per
+  // colour is traced by the rule; below that the rim is Bayer-dithered into cells meeting at
+  // corners, and mid tones draw one-cell lines (horizontal, vertical or diagonal). Other tiles
+  // hold a dot sized by the tone: the banner's declared exception, the one texture that does
+  // not keep to the rule. The accent paints whole regions (a second noise); a solid touching a
+  // solid of the other colour falls back to a dot, and dots stay under ¾ cell on a colour
+  // boundary and at half a cell next to a solid, so different shapes keep ¼ cell apart.
+  const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+  const NB8 = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+  function dither(p) {
+    const SOLID = 0.9, BRIDGE = 0.72, LINE = 0.62;
+    const wrap = p.edges === 'seamless', M = p.edges === 'bleed' ? 2 : 0; // margin in cells
+    const gw = p.cols + 2 * M, gh = p.rows + 2 * M, N = gw * gh;
+    const tn = noise(gw, gh, wrap, p, p.seed);
+    const sn = noise(gw, gh, wrap, { grain: p.grain * 1.7, stretch: p.stretch }, p.seed + 1);
+    const on = noise(gw, gh, wrap, p, p.seed + 2);
+    const at = (i, j) => (wrap ? mod(j, gh) * gw + mod(i, gw) : i < 0 || j < 0 || i >= gw || j >= gh ? -1 : j * gw + i);
+    const inFrame = (i, j) => i >= M && j >= M && i < M + p.cols && j < M + p.rows;
+    const order = Array.from(sn).sort((a, b) => a - b);
+    const cut = p.accent > 0 ? order[Math.min(N - 1, Math.floor(p.accent * N))] : -1;
+    const side = new Uint8Array(N);
+    for (let k = 0; k < N; k++) side[k] = sn[k] < cut ? 1 : 0;
+
+    const tone = new Float32Array(N), solid = new Uint8Array(N), size = new Float32Array(N);
+    // Returns the ink inside the frame, in cells.
+    const build = (shift) => {
+      for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) {
+        const k = j * gw + i, t = Math.min(1, Math.max(0.06, 0.45 + (tn[k] - 0.5) * 2.4 + shift));
+        tone[k] = t;
+        let s = t >= SOLID || ((t - BRIDGE) / (SOLID - BRIDGE)) * 16 > BAYER[j & 3][i & 3];
+        if (!s && t >= LINE) {
+          const [a, b] = on[k] < 0.42 ? [i, j] : on[k] > 0.58 ? [j, i] : [i, i - j];
+          s = mod(b, 3) === 0 && mod(a + 2 * Math.floor(b / 3), 4) < 2 + Math.floor((t - LINE) / 0.06);
+        }
+        solid[k] = s ? 1 : 0;
+      }
+      const solid0 = solid.slice();
+      for (let k = 0; k < N; k++) {
+        if (!solid0[k]) continue;
+        const i = k % gw, j = (k - i) / gw;
+        for (const [dx, dy] of NB8) {
+          const m = at(i + dx, j + dy);
+          if (m >= 0 && solid0[m] && side[m] !== side[k]) { solid[k] = 0; break; }
+        }
+      }
+      let ink = 0;
+      for (let k = 0; k < N; k++) {
+        const i = k % gw, j = (k - i) / gw;
+        size[k] = 0;
+        if (solid[k]) { if (inFrame(i, j)) ink += 1; continue; }
+        if (tone[k] * 16 <= BAYER[j & 3][i & 3]) continue;
+        let s = 0.26 + tone[k] * 0.65;
+        for (const [dx, dy] of NB8) {
+          const m = at(i + dx, j + dy);
+          if (m < 0) continue;
+          if (side[m] !== side[k]) s = Math.min(s, 0.75);
+          if (solid[m]) s = Math.min(s, 0.5);
+        }
+        size[k] = s;
+        if (inFrame(i, j)) ink += s * s;
+      }
+      return ink;
+    };
+    const target = p.cols * p.rows * (1 - p.blank);
+    let lo = -1, hi = 1;
+    for (let it = 0; it < 18; it++) { const v = (lo + hi) / 2; if (build(v) > target) hi = v; else lo = v; }
+    const ink = build((lo + hi) / 2);
+
+    // Output coordinates are in half cells, with `scale` applied: a cell is 2 * scale.
+    // Seamless tiles are traced with a wrapped cell of padding, `tiles` repeats as one piece.
+    const reps = wrap ? Math.max(1, Math.round(p.tiles)) : 1, pad = wrap ? 1 : 0;
+    const TW = gw * reps + 2 * pad, TH = gh * reps + 2 * pad, C = 2 * p.scale, off = -(M + pad) * C;
+    const masks = [new Uint8Array(TW * TH), new Uint8Array(TW * TH)], dots = ['', ''];
+    const f = (v) => Math.round(v * 1000) / 1000;
+    for (let J = 0; J < TH; J++) for (let I = 0; I < TW; I++) {
+      const i = wrap ? mod(I - pad, gw) : I, j = wrap ? mod(J - pad, gh) : J, k = j * gw + i;
+      if (solid[k]) { masks[side[k]][J * TW + I] = 1; continue; }
+      if (!size[k]) continue;
+      const s = size[k] * C, r = f(Math.min(s / 2, p.radius * C));
+      const x = I * C + off + (C - s) / 2, y = J * C + off + (C - s) / 2;
+      dots[side[k]] += `M${f(x + r)} ${f(y)}H${f(x + s - r)}A${r} ${r} 0 0 1 ${f(x + s)} ${f(y + r)}` +
+        `V${f(y + s - r)}A${r} ${r} 0 0 1 ${f(x + s - r)} ${f(y + s)}H${f(x + r)}` +
+        `A${r} ${r} 0 0 1 ${f(x)} ${f(y + s - r)}V${f(y + r)}A${r} ${r} 0 0 1 ${f(x + r)} ${f(y)}Z`;
+    }
+    const trace = (c) => Geo.traceBitmap(masks[c], TW, TH, p.radius, { scale: C, ox: off, oy: off }) + dots[c];
+
+    // Shapes in the frame: each union of solids, plus each dot.
+    const { labels } = components({ GW: gw, GH: gh, wrap, bits: solid });
+    const seen = new Set();
+    let dotCount = 0;
+    for (let j = M; j < M + p.rows; j++) for (let i = M; i < M + p.cols; i++) {
+      const k = j * gw + i;
+      if (solid[k]) seen.add(labels[k]); else if (size[k]) dotCount++;
+    }
+    return {
+      W: p.cols * 2, H: p.rows * 2, scale: p.scale,
+      base: trace(0), accent: trace(1),
+      blank: Math.max(0, 1 - ink / (p.cols * p.rows)),
+      shapes: seen.size + dotCount,
+    };
+  }
 
   /* ---------- finishing ---------- */
 
@@ -467,6 +522,7 @@
 
   function generate(options) {
     const p = Object.assign({}, DEFAULTS, options);
+    if (p.mode === 'dither') return dither(p);
     const W = p.cols * CELL, H = p.rows * CELL;
     const F = makeField(W, H, p.edges);
     (GENERATORS[p.mode] || fieldMode)(F, p, p.seed);

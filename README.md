@@ -1,12 +1,12 @@
 # Código visual LINA
 
-Ferramentas para desenhar com a geometria do logotipo do LINA (Laboratório de Modelagem da Informação, UFC). Tudo o que elas produzem segue a própria regra de construção do logotipo: células quadradas numa grade de meia célula, cantos com raio de ¼ de célula, convexos onde o bloco está livre e côncavos onde ele encontra um vizinho.
+Ferramentas para desenhar com a geometria do logotipo do LINA (Laboratório de Modelagem da Informação, UFC). Tudo o que elas produzem segue a própria regra de construção do logotipo: células quadradas numa grade de meia célula, cantos com raio de ¼ de célula, convexos onde o bloco está livre e côncavos onde ele encontra um vizinho. A exceção é o pontilhado, o padrão do banner da página inicial, cujos pontos variam de tamanho.
 
 **Use online:** https://eugeniomoreira-iaud.github.io/lina-visual-code/
 
 - **Células** (`grid.html`): posicione e mova células numa grade e veja a regra arredondá-las.
-- **Texturas** (`texture.html`): padrões aleatórios com semente (dispersão, campo, hastes, glifos), com controle do espaço vazio, do formato e da paleta.
-- **Imagens** (`image.html`): transforme uma foto em retícula de quadrados, hastes ou bitmap, com o original ao lado do resultado.
+- **Texturas** (`texture.html`): padrões aleatórios com semente (dispersão, campo, pontilhado, glifos), com controle do espaço vazio, do formato e da paleta.
+- **Imagens** (`image.html`): transforme uma foto em pontilhado ou bitmap, com o original ao lado do resultado.
 
 As três exportam SVG; Texturas e Imagens também exportam PNG. Texturas e Imagens guardam os ajustes no endereço da página, então um link copiado reproduz o resultado (a imagem em si não vai no link). Células guarda o desenho no navegador.
 
@@ -22,7 +22,7 @@ python3 -m http.server
 
 A interface usa a Neometric, uma fonte licenciada que não faz parte deste repositório. Sem ela, as páginas usam a fonte sem serifa do sistema. Para ver as páginas com a tipografia da marca na sua máquina, coloque estes arquivos numa pasta `font/` na raiz (ela é ignorada pelo git):
 
-- `Neometric-Regular.otf`
+- `Neometric Light (Regular).otf`
 - `Neometric Medium (Regular).otf`
 - `Neometric Extra Bold (Bold).otf`
 

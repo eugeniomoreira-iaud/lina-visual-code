@@ -213,7 +213,7 @@
         <div class="preview"><svg id="imagePreview" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
         <div class="body">
           <h3>Filtro de imagem</h3>
-          <p>Transforme uma foto numa retícula de pontos, hastes ou células LINA, com o original ao lado. Sua imagem nunca sai do seu computador.</p>
+          <p>Transforme uma foto num pontilhado ou em células LINA, com o original ao lado. Sua imagem nunca sai do seu computador.</p>
           <a class="go" href="image.html">Abrir o filtro</a>
         </div>
       </article>
@@ -222,7 +222,7 @@
 
   <section class="wrap rules" aria-labelledby="rulesTitle">
     <h2 class="section-title foot" id="rulesTitle">A regra</h2>
-    <p class="foot">Toda forma aqui é uma união de células quadradas. Seu contorno é então arredondado por uma única regra, com raio de ¼ de célula, e nada mais. O filtro de imagem acrescenta uma exceção, o ponto de meia célula, que a mesma regra transforma em círculo.</p>
+    <p class="foot">Toda forma aqui é uma união de células quadradas. Seu contorno é então arredondado por uma única regra, com raio de ¼ de célula, e nada mais. A exceção é o pontilhado do banner, das texturas e do filtro de imagem, cujos pontos variam de tamanho.</p>
     <div class="rule-grid">
       <figure>
         <svg id="ruleSteps" aria-hidden="true"></svg>
@@ -718,7 +718,7 @@ diagram('ruleArch', [[0, 0, 2], [2, 0, 2], [3, 0, 2], [0, 2, 2], [3, 2, 2]]);
 
 // Texture door: a live texture from a few tuned starting points.
 const PRESETS = [
-  { mode: 'stems', blank: 0.46, steps: 0.55, gutter: 0.35 },
+  { mode: 'dither', blank: 0.55, grain: 4 },
   { mode: 'field', blank: 0.5, steps: 0.6, grain: 3.5 },
   { mode: 'scatter', blank: 0.58, steps: 0.35, clump: 0.9 },
   { mode: 'glyphs', blank: 0.5, gap: 1, glyphSize: 1, rotate: true },
@@ -738,7 +738,7 @@ function showTexture() {
 document.getElementById('texturePreview').addEventListener('click', () => { presetIndex++; showTexture(); });
 showTexture();
 
-// Image door: the sample portrait through the halftone filter.
+// Image door: the sample portrait through the dither filter.
 (function () {
   const img = new Image();
   img.onload = () => {
@@ -747,11 +747,11 @@ showTexture();
     const g = c.getContext('2d');
     g.drawImage(img, 0, 0);
     const src = LinaImage.prepare(g.getImageData(0, 0, c.width, c.height));
-    const res = LinaImage.process(src, { mode: 'halftone', detail: 60, screen: 3, halfDots: true, dither: 'diffusion' });
+    const res = LinaImage.process(src, { mode: 'dither', detail: 60 });
     const svg = document.getElementById('imagePreview');
     svg.setAttribute('viewBox', `0 0 ${res.U} ${res.V}`);
     svg.innerHTML = `<rect width="${res.U}" height="${res.V}" fill="#F1EDE6"/>` +
-      `<path fill="${OXBLOOD}" fill-rule="evenodd" d="${LinaGeometry.traceBitmap(res.bits, res.U, res.V, 0.5)}"/>`;
+      `<path fill="${OXBLOOD}" fill-rule="evenodd" d="${LinaImage.outline(res, 0.25)}"/>`;
   };
   img.src = window.LINA_SAMPLE;
 })();

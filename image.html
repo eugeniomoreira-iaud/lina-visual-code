@@ -47,8 +47,7 @@
   <fieldset>
     <legend>Filtro</legend>
     <div class="seg" data-key="mode">
-      <button type="button" data-value="halftone">Retícula</button>
-      <button type="button" data-value="stems">Hastes</button>
+      <button type="button" data-value="dither">Pontilhado</button>
       <button type="button" data-value="bitmap">Bitmap</button>
     </div>
     <p class="hint" id="modeHint"></p>
@@ -62,53 +61,16 @@
     </div>
   </fieldset>
 
-  <div data-for="halftone stems">
+  <div data-for="bitmap">
     <fieldset>
-      <legend><label for="screen">Malha</label></legend>
-      <div class="range-row">
-        <input id="screen" data-num="screen" type="range" min="2" max="10" step="0.5">
-        <output data-out="screen"></output>
+      <legend>Pontilhamento</legend>
+      <div class="seg" data-key="dither">
+        <button type="button" data-value="none">Nenhum</button>
+        <button type="button" data-value="ordered">Ordenado</button>
+        <button type="button" data-value="diffusion">Difusão</button>
       </div>
-      <p class="hint">Malhas maiores dão mais passos entre claro e escuro.</p>
-    </fieldset>
-
-    <fieldset>
-      <legend>Pontos</legend>
-      <div class="checks">
-        <label><input type="checkbox" data-bool="halfDots"> Pontos de meia célula</label>
-        <label><input type="checkbox" data-bool="stagger"> Desencontrado</label>
-        <label><input type="checkbox" data-bool="merge"> Fundir escuros</label>
-      </div>
-      <p class="hint">Pontos de meia célula são a única forma mais fina que uma célula, como a travessa do A. A regra dos cantos os deixa redondos. Com Fundir escuros, tons mais escuros que 93% preenchem a casa e se fundem em formas sólidas.</p>
     </fieldset>
   </div>
-
-  <div data-for="stems">
-    <fieldset>
-      <legend>Direção</legend>
-      <div class="seg" data-key="direction">
-        <button type="button" data-value="vertical">Vertical</button>
-        <button type="button" data-value="horizontal">Horizontal</button>
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>Espaço entre hastes</legend>
-      <div class="seg" data-key="stemGap">
-        <button type="button" data-value="1">¼ de célula</button>
-        <button type="button" data-value="2">½ célula</button>
-      </div>
-      <p class="hint">¼ de célula, como o espaço entre as letras do logotipo.</p>
-    </fieldset>
-  </div>
-
-  <fieldset>
-    <legend>Pontilhamento</legend>
-    <div class="seg" data-key="dither">
-      <button type="button" data-value="none">Nenhum</button>
-      <button type="button" data-value="ordered">Ordenado</button>
-      <button type="button" data-value="diffusion">Difusão</button>
-    </div>
-  </fieldset>
 
   <fieldset>
     <legend><label for="brightness">Brilho</label></legend>
@@ -208,15 +170,13 @@ const STORE = 'lina-image-v1';
 const PHOTO = 'lina-image-photo-v2';
 
 const MODE_HINTS = {
-  halftone: 'Uma grade de pontos que crescem conforme a imagem escurece.',
-  stems: 'Barras de uma célula de largura, mais curtas onde a imagem é mais clara.',
+  dither: 'Pontos que crescem conforme a imagem escurece, como no banner da página inicial. Nos escuros viram células unidas, com pontes em diagonal, e linhas seguem os contornos.',
   bitmap: 'Dois tons: cada parte da imagem é tinta ou papel.',
 };
-const NOUNS = { halftone: 'pontos', stems: 'hastes', bitmap: 'células' };
+const NOUNS = { dither: 'células', bitmap: 'células' };
 
 const DEFAULTS = {
-  mode: 'halftone', detail: 84, screen: 3, halfDots: true, stagger: false, merge: false,
-  direction: 'vertical', stemGap: '1', dither: 'diffusion',
+  mode: 'dither', detail: 84, dither: 'diffusion',
   brightness: 0, contrast: 0, midtones: 35, cutoff: 8, smooth: 30, invert: false, original: true,
   radius: 0.25, palette: 1, transparent: false,
 };
@@ -253,8 +213,7 @@ function readStore() {
 }
 
 const engineOptions = () => ({
-  mode: p.mode, detail: p.detail, screen: p.screen, halfDots: p.halfDots, stagger: p.stagger, merge: p.merge,
-  direction: p.direction, stemGap: Number(p.stemGap), dither: p.dither,
+  mode: p.mode, detail: p.detail, dither: p.dither,
   brightness: p.brightness / 100, contrast: p.contrast / 100, midtones: p.midtones / 100,
   cutoff: p.cutoff / 100, smooth: p.smooth / 100,
   invert: p.invert, radius: p.radius,
@@ -323,7 +282,7 @@ function schedule() {
 function compute() {
   if (!src) return;
   result = LinaImage.process(src, engineOptions());
-  path = new Path2D(Geo.traceBitmap(result.bits, result.U, result.V, p.radius * LinaImage.CELL));
+  path = new Path2D(LinaImage.outline(result, p.radius));
 }
 
 // Original and result side by side, or stacked when that gives bigger frames.
@@ -383,7 +342,6 @@ new ResizeObserver(paint).observe(stage);
 
 const FORMAT_OUT = {
   detail: (v) => `${v} ${NOUNS[p.mode]}`,
-  screen: (v) => `${Math.floor(v)}${v % 1 ? '½' : ''} células`,
   brightness: (v) => (v > 0 ? '+' + v : String(v)),
   contrast: (v) => (v > 0 ? '+' + v : String(v)),
   midtones: (v) => (v > 0 ? '+' + v : String(v)),
@@ -479,7 +437,7 @@ function download(blob, name) {
 function svgString() {
   const S = 5, c = palette();
   const w = result.U * S, h = result.V * S;
-  const d = Geo.traceBitmap(result.bits, result.U, result.V, p.radius * LinaImage.CELL, { scale: S });
+  const d = LinaImage.outline(result, p.radius, S);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">\n` +
     (p.transparent ? '' : `  <rect width="${w}" height="${h}" fill="${c.bg}"/>\n`) +
     `  <path fill="${c.fg}" fill-rule="evenodd" d="${d}"/>\n</svg>\n`;
@@ -518,6 +476,7 @@ $('#link').addEventListener('click', () => copyText(location.href, 'Link copiado
 
 $('#mark').innerHTML = `<path fill="#9B0A0E" d="${Geo.outlinePath(Geo.LETTERS.L.blocks, 0.5)}"/>`;
 if (!readHash()) readStore();
+if (!MODE_HINTS[p.mode]) p.mode = DEFAULTS.mode; // old links may name a retired mode (halftone, stems)
 update();
 
 (async function restorePhoto() {
