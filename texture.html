@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LINA textures</title>
+<title>Gerador de texturas LINA</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="lina.css">
 <style>
@@ -29,35 +29,35 @@
 <aside class="sidebar">
   <a class="brand" href="index.html">
     <svg id="mark" viewBox="0 0 4 6" aria-hidden="true"></svg>
-    <div><strong>LINA</strong><span>Visual code</span></div>
+    <div><strong>LINA</strong><span>Código visual</span></div>
   </a>
-  <nav class="tools" aria-label="Tools">
-    <a href="grid.html">Cells</a>
-    <a href="texture.html" aria-current="page">Textures</a>
-    <a href="image.html">Images</a>
+  <nav class="tools" aria-label="Ferramentas">
+    <a href="grid.html">Células</a>
+    <a href="texture.html" aria-current="page">Texturas</a>
+    <a href="image.html">Imagens</a>
   </nav>
 
   <fieldset>
-    <legend>Pattern</legend>
+    <legend>Padrão</legend>
     <div class="seg grid2" data-key="mode">
-      <button type="button" data-value="scatter">Scatter</button>
-      <button type="button" data-value="field">Field</button>
-      <button type="button" data-value="stems">Stems</button>
-      <button type="button" data-value="glyphs">Glyphs</button>
+      <button type="button" data-value="scatter">Dispersão</button>
+      <button type="button" data-value="field">Campo</button>
+      <button type="button" data-value="stems">Hastes</button>
+      <button type="button" data-value="glyphs">Glifos</button>
     </div>
     <p class="hint" id="modeHint"></p>
   </fieldset>
 
   <fieldset>
-    <legend><label for="seed">Seed</label></legend>
+    <legend><label for="seed">Semente</label></legend>
     <div class="seed-row">
       <input class="field-input" id="seed" type="number" min="0" max="999999" step="1">
-      <button class="btn" id="reseed" type="button">New seed</button>
+      <button class="btn" id="reseed" type="button">Nova semente</button>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend><label for="blank">Blank space</label></legend>
+    <legend><label for="blank">Espaço vazio</label></legend>
     <div class="range-row">
       <input id="blank" data-num="blank" type="range" min="5" max="95" step="1">
       <output id="blankOut"></output>
@@ -67,29 +67,29 @@
 
   <div data-mode-not="glyphs">
   <fieldset>
-    <legend><label for="steps">Half steps</label></legend>
+    <legend><label for="steps">Meios passos</label></legend>
     <div class="range-row">
       <input id="steps" data-num="steps" type="range" min="0" max="100" step="1">
       <output data-out="steps"></output>
     </div>
-    <p class="hint">How often shapes sit half a cell off the grid.</p>
+    <p class="hint">Frequência com que as formas ficam meia célula fora da grade.</p>
   </fieldset>
   </div>
 
   <div data-mode-not="glyphs field">
   <fieldset>
-    <legend><label for="quarter">Quarter gaps</label></legend>
+    <legend><label for="quarter">Vãos de ¼</label></legend>
     <div class="range-row">
       <input id="quarter" data-num="quarter" type="range" min="0" max="100" step="1">
       <output data-out="quarter"></output>
     </div>
-    <p class="hint">How often a separate piece sits a quarter cell from its neighbour, like the letters of the wordmark.</p>
+    <p class="hint">Frequência com que uma peça separada fica a ¼ de célula da vizinha, como as letras do logotipo.</p>
   </fieldset>
   </div>
 
   <div data-mode="scatter">
     <fieldset>
-      <legend><label for="clump">Clumping</label></legend>
+      <legend><label for="clump">Aglomeração</label></legend>
       <div class="range-row">
         <input id="clump" data-num="clump" type="range" min="0" max="98" step="1">
         <output data-out="clump"></output>
@@ -99,14 +99,14 @@
 
   <div data-mode="field">
     <fieldset>
-      <legend><label for="grain">Grain</label></legend>
+      <legend><label for="grain">Grão</label></legend>
       <div class="range-row">
         <input id="grain" data-num="grain" type="range" min="1" max="16" step="0.5">
         <output data-out="grain"></output>
       </div>
     </fieldset>
     <fieldset>
-      <legend><label for="stretch">Stretch</label></legend>
+      <legend><label for="stretch">Alongamento</label></legend>
       <div class="range-row">
         <input id="stretch" data-num="stretch" type="range" min="-100" max="100" step="1">
         <output data-out="stretch"></output>
@@ -116,65 +116,65 @@
 
   <div data-mode="stems">
     <fieldset>
-      <legend>Direction</legend>
+      <legend>Direção</legend>
       <div class="seg" data-key="direction">
         <button type="button" data-value="vertical">Vertical</button>
         <button type="button" data-value="horizontal">Horizontal</button>
       </div>
     </fieldset>
     <fieldset>
-      <legend>Gutter width</legend>
+      <legend>Largura do vão</legend>
       <div class="seg" data-key="gutterWidth">
-        <button type="button" data-value="1">¼ cell</button>
-        <button type="button" data-value="2">½ cell</button>
+        <button type="button" data-value="1">¼ de célula</button>
+        <button type="button" data-value="2">½ célula</button>
       </div>
     </fieldset>
     <fieldset>
-      <legend><label for="gutter">Gutters</label></legend>
+      <legend><label for="gutter">Vãos</label></legend>
       <div class="range-row">
         <input id="gutter" data-num="gutter" type="range" min="0" max="100" step="1">
         <output data-out="gutter"></output>
       </div>
-      <p class="hint">Share of neighbouring stems kept apart instead of merged.</p>
+      <p class="hint">Parcela das hastes vizinhas mantidas separadas em vez de fundidas.</p>
     </fieldset>
   </div>
 
   <div data-mode="glyphs">
     <fieldset>
-      <legend>Letter size</legend>
+      <legend>Tamanho da letra</legend>
       <div class="seg" data-key="glyphSize">
-        <button type="button" data-value="1">3 cells</button>
+        <button type="button" data-value="1">3 células</button>
         <button type="button" data-value="2">6</button>
         <button type="button" data-value="3">9</button>
       </div>
     </fieldset>
     <fieldset>
-      <legend>Letter gap</legend>
+      <legend>Espaço entre letras</legend>
       <div class="seg" data-key="gap">
-        <button type="button" data-value="1">¼ cell</button>
-        <button type="button" data-value="2">½ cell</button>
-        <button type="button" data-value="0">Merge</button>
+        <button type="button" data-value="1">¼ célula</button>
+        <button type="button" data-value="2">½ célula</button>
+        <button type="button" data-value="0">Fundir</button>
       </div>
-      <p class="hint">The logo sets its letters a quarter cell apart.</p>
+      <p class="hint">No logotipo, as letras ficam a ¼ de célula umas das outras.</p>
     </fieldset>
     <fieldset>
-      <legend>Letter mix</legend>
-      <div class="range-row"><span class="mix">L</span><input data-num="wL" type="range" min="0" max="100" step="1" aria-label="Share of L"><output data-out="wL"></output></div>
-      <div class="range-row"><span class="mix">I</span><input data-num="wI" type="range" min="0" max="100" step="1" aria-label="Share of I"><output data-out="wI"></output></div>
-      <div class="range-row"><span class="mix">n</span><input data-num="wn" type="range" min="0" max="100" step="1" aria-label="Share of n"><output data-out="wn"></output></div>
-      <div class="range-row"><span class="mix">A</span><input data-num="wA" type="range" min="0" max="100" step="1" aria-label="Share of A"><output data-out="wA"></output></div>
+      <legend>Proporção das letras</legend>
+      <div class="range-row"><span class="mix">L</span><input data-num="wL" type="range" min="0" max="100" step="1" aria-label="Proporção de L"><output data-out="wL"></output></div>
+      <div class="range-row"><span class="mix">I</span><input data-num="wI" type="range" min="0" max="100" step="1" aria-label="Proporção de I"><output data-out="wI"></output></div>
+      <div class="range-row"><span class="mix">n</span><input data-num="wn" type="range" min="0" max="100" step="1" aria-label="Proporção de n"><output data-out="wn"></output></div>
+      <div class="range-row"><span class="mix">A</span><input data-num="wA" type="range" min="0" max="100" step="1" aria-label="Proporção de A"><output data-out="wA"></output></div>
     </fieldset>
     <fieldset>
-      <legend>Letters</legend>
+      <legend>Letras</legend>
       <div class="checks">
-        <label><input type="checkbox" data-bool="rotate"> Rotate</label>
+        <label><input type="checkbox" data-bool="rotate"> Girar</label>
       </div>
-      <p class="hint">Letters are set like type, packed from the top. Blank space removes letters at random.</p>
+      <p class="hint">As letras são compostas como tipos, encaixadas a partir do topo. O espaço vazio remove letras ao acaso.</p>
     </fieldset>
   </div>
 
   <fieldset>
-    <legend>Format</legend>
+    <legend>Formato</legend>
     <div class="seg" data-key="format">
       <button type="button" data-value="1:1">1:1</button>
       <button type="button" data-value="4:5">4:5</button>
@@ -184,7 +184,7 @@
   </fieldset>
 
   <fieldset>
-    <legend><label for="size">Cells across</label></legend>
+    <legend><label for="size">Células na largura</label></legend>
     <div class="range-row">
       <input id="size" data-num="size" type="range" min="8" max="120" step="1">
       <output id="sizeOut"></output>
@@ -192,17 +192,17 @@
   </fieldset>
 
   <fieldset>
-    <legend>Edges</legend>
+    <legend>Bordas</legend>
     <div class="seg" data-key="edges">
-      <button type="button" data-value="bleed">Bleed</button>
-      <button type="button" data-value="inside">Inside</button>
-      <button type="button" data-value="seamless">Seamless</button>
+      <button type="button" data-value="bleed">Sangria</button>
+      <button type="button" data-value="inside">Dentro</button>
+      <button type="button" data-value="seamless">Contínuo</button>
     </div>
     <p class="hint" id="edgesHint"></p>
   </fieldset>
 
   <fieldset>
-    <legend><label for="radius">Corner radius</label></legend>
+    <legend><label for="radius">Raio dos cantos</label></legend>
     <div class="range-row">
       <input id="radius" data-num="radius" type="range" min="0" max="0.25" step="0.005">
       <output data-out="radius"></output>
@@ -210,20 +210,20 @@
   </fieldset>
 
   <fieldset>
-    <legend>Options</legend>
+    <legend>Opções</legend>
     <div class="checks">
-      <label><input type="checkbox" data-bool="pinholes"> Fill pinholes</label>
-      <label id="repeatLabel"><input type="checkbox" data-bool="repeat"> Preview 2 × 2</label>
+      <label><input type="checkbox" data-bool="pinholes"> Preencher furinhos</label>
+      <label id="repeatLabel"><input type="checkbox" data-bool="repeat"> Prévia 2 × 2</label>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Colors</legend>
+    <legend>Cores</legend>
     <div class="swatches palettes" id="palettes"></div>
   </fieldset>
 
   <fieldset>
-    <legend><label for="accent">Accent shapes</label></legend>
+    <legend><label for="accent">Formas de destaque</label></legend>
     <div class="range-row">
       <input id="accent" data-num="accent" type="range" min="0" max="60" step="1">
       <output data-out="accent"></output>
@@ -231,26 +231,26 @@
   </fieldset>
 
   <fieldset>
-    <legend>Export</legend>
+    <legend>Exportar</legend>
     <div class="actions">
-      <button class="btn primary" id="svg" type="button">Download SVG</button>
-      <button class="btn" id="png" type="button">Download PNG</button>
-      <button class="btn" id="copy" type="button">Copy SVG</button>
-      <button class="btn" id="link" type="button">Copy link</button>
+      <button class="btn primary" id="svg" type="button">Baixar SVG</button>
+      <button class="btn" id="png" type="button">Baixar PNG</button>
+      <button class="btn" id="copy" type="button">Copiar SVG</button>
+      <button class="btn" id="link" type="button">Copiar link</button>
     </div>
     <div class="checks" style="margin-top:10px">
-      <label><input type="checkbox" data-bool="transparent"> Transparent background</label>
+      <label><input type="checkbox" data-bool="transparent"> Fundo transparente</label>
     </div>
   </fieldset>
 
   <div class="notes">
-    <p>Press <kbd>R</kbd> for a new seed. The same seed and settings always give the same texture, and the address bar keeps them all.</p>
-    <p>Every pattern is built from whole cells, so it follows the same corner rule as the logo.</p>
+    <p>Pressione <kbd>R</kbd> para uma nova semente. A mesma semente com os mesmos ajustes sempre gera a mesma textura, e a barra de endereço guarda todos eles.</p>
+    <p>Todo padrão é feito de células inteiras, por isso segue a mesma regra de cantos do logotipo.</p>
   </div>
 </aside>
 
 <main class="stage">
-  <svg id="view" xmlns="http://www.w3.org/2000/svg" aria-label="Texture preview"></svg>
+  <svg id="view" xmlns="http://www.w3.org/2000/svg" aria-label="Prévia da textura"></svg>
   <div class="status" id="status"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </main>
@@ -264,15 +264,15 @@ const STORE = 'lina-texture-v1';
 
 const FORMATS = { '1:1': [1, 1], '4:5': [4, 5], '16:9': [16, 9], '9:16': [9, 16] };
 const MODE_HINTS = {
-  scatter: 'Random cells. Clumping links them into trails.',
-  field: 'Smooth noise cut into whole cells. Grain sets the size of the islands.',
-  stems: 'Bars one cell wide with random lengths, like the wordmark.',
-  glyphs: 'The letters L, I, n and A, set beside each other like type.',
+  scatter: 'Células ao acaso. A aglomeração as liga em trilhas.',
+  field: 'Ruído suave recortado em células inteiras. O grão define o tamanho das ilhas.',
+  stems: 'Barras de uma célula de largura e comprimentos aleatórios, como no logotipo.',
+  glyphs: 'As letras L, I, n e A, compostas lado a lado como tipos.',
 };
 const EDGE_HINTS = {
-  bleed: 'Shapes run off the edge of the frame.',
-  inside: 'Shapes stay whole inside the frame.',
-  seamless: 'The frame repeats without a visible seam.',
+  bleed: 'As formas saem pela borda do quadro.',
+  inside: 'As formas ficam inteiras dentro do quadro.',
+  seamless: 'O quadro se repete sem emenda visível.',
 };
 
 const DEFAULTS = {
@@ -363,13 +363,13 @@ function draw() {
     (res.accent ? `<path fill="${c.accent}" fill-rule="evenodd" d="${res.accent}"/>` : '') +
     `</g>`;
   const { cols, rows } = dims();
-  const blank = (res.blank * 100).toFixed(1);
+  const blank = (res.blank * 100).toFixed(1).replace('.', ',');
   const short = res.blank * 100 - p.blank > 3;
   $('#blankActual').textContent = short
-    ? `In this texture: ${blank}% blank, the densest this pattern gets.` +
-      (p.mode === 'glyphs' && p.gap !== '0' ? ' Set the letter gap to Merge to go denser.' : '')
-    : `In this texture: ${blank}% blank`;
-  $('#status').textContent = `${cols} × ${rows} cells, ${res.shapes} shape${res.shapes === 1 ? '' : 's'}`;
+    ? `Nesta textura: ${blank}% vazio, o máximo de densidade deste padrão.` +
+      (p.mode === 'glyphs' && p.gap !== '0' ? ' Para mais densidade, ponha o espaço entre letras em Fundir.' : '')
+    : `Nesta textura: ${blank}% vazio`;
+  $('#status').textContent = `${cols} × ${rows} células, ${res.shapes} forma${res.shapes === 1 ? '' : 's'}`;
 }
 
 /* ---------- controls ---------- */
@@ -377,9 +377,9 @@ function draw() {
 const FORMAT_OUT = {
   steps: (v) => v + '%', clump: (v) => v + '%', gutter: (v) => v + '%', accent: (v) => v + '%', quarter: (v) => v + '%',
   wL: (v) => v + '%', wI: (v) => v + '%', wn: (v) => v + '%', wA: (v) => v + '%',
-  grain: (v) => v + (v === 1 ? ' cell' : ' cells'),
-  stretch: (v) => (v === 0 ? 'None' : v > 0 ? `Tall ${v}` : `Wide ${-v}`),
-  radius: (v) => ({ 0: 'Square', 0.25: '¼ cell', 0.125: '⅛ cell' })[v] ?? `${v.toFixed(3)} cell`,
+  grain: (v) => String(v).replace('.', ',') + (v === 1 ? ' célula' : ' células'),
+  stretch: (v) => (v === 0 ? 'Nenhum' : v > 0 ? `Alto ${v}` : `Largo ${-v}`),
+  radius: (v) => ({ 0: 'Reto', 0.25: '¼ de célula', 0.125: '⅛ de célula' })[v] ?? `${v.toFixed(3).replace('.', ',')} de célula`,
 };
 
 function syncControls() {
@@ -461,7 +461,7 @@ function download(blob, name) {
   a.href = url; a.download = name;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast('Downloaded ' + name);
+  toast('Baixado: ' + name);
 }
 
 // One cell = 20 units in the exported file.
@@ -496,8 +496,8 @@ async function copyText(text, done) {
   }
   toast(done);
 }
-$('#copy').addEventListener('click', () => copyText(exportSVG(), 'SVG copied'));
-$('#link').addEventListener('click', () => copyText(location.href, 'Link copied'));
+$('#copy').addEventListener('click', () => copyText(exportSVG(), 'SVG copiado'));
+$('#link').addEventListener('click', () => copyText(location.href, 'Link copiado'));
 
 /* ---------- boot ---------- */
 

@@ -13,12 +13,12 @@
   const Geo = root.LinaGeometry;
 
   const PALETTES = [
-    { name: 'Crimson on white', bg: '#FFFFFF', fg: '#9B0A0E', accent: '#520000' },
-    { name: 'White on crimson', bg: '#9B0A0E', fg: '#FFFFFF', accent: '#520000' },
-    { name: 'Oxblood on crimson', bg: '#9B0A0E', fg: '#520000', accent: '#FFFFFF' },
-    { name: 'Crimson on oxblood', bg: '#520000', fg: '#9B0A0E', accent: '#FFFFFF' },
-    { name: 'Black on white', bg: '#FFFFFF', fg: '#000000', accent: '#9B0A0E' },
-    { name: 'White on black', bg: '#000000', fg: '#FFFFFF', accent: '#9B0A0E' },
+    { name: 'Carmim sobre branco', bg: '#FFFFFF', fg: '#9B0A0E', accent: '#520000' },
+    { name: 'Branco sobre carmim', bg: '#9B0A0E', fg: '#FFFFFF', accent: '#520000' },
+    { name: 'Vinho sobre carmim', bg: '#9B0A0E', fg: '#520000', accent: '#FFFFFF' },
+    { name: 'Carmim sobre vinho', bg: '#520000', fg: '#9B0A0E', accent: '#FFFFFF' },
+    { name: 'Preto sobre branco', bg: '#FFFFFF', fg: '#000000', accent: '#9B0A0E' },
+    { name: 'Branco sobre preto', bg: '#000000', fg: '#FFFFFF', accent: '#9B0A0E' },
   ];
 
   const DEFAULTS = {

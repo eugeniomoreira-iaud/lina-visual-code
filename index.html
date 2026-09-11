@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LINA visual code</title>
+<title>Código visual LINA</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="lina.css">
 <style>
@@ -78,59 +78,59 @@
     <p class="name">Laboratório de Modelagem<br>da Informação</p>
     <p class="tagline">Arte · Arquitetura · Ambiente</p>
   </div>
-  <p class="intro">Three tools for drawing with the cell that builds the LINA logo. Whatever you make follows the logo's own corner rule, so it always belongs to the family.</p>
+  <p class="intro">Três ferramentas para desenhar com a célula que constrói o logotipo LINA. Tudo o que você fizer segue a regra de cantos do próprio logotipo, por isso sempre pertence à família.</p>
 </header>
 
 <main class="wrap">
-  <section class="doors" aria-label="Tools">
+  <section class="doors" aria-label="Ferramentas">
     <article class="door editor">
       <div class="preview"><svg id="editorPreview" viewBox="0 0 32 20" aria-hidden="true"></svg></div>
       <div class="body">
-        <h2>Cell editor</h2>
-        <p>Place and drag cells on a grid to draw letters, marks and icons. Every change redraws the outline, and you can export it as a clean SVG.</p>
-        <a class="go" href="grid.html">Open the editor</a>
+        <h2>Editor de células</h2>
+        <p>Posicione e arraste células numa grade para desenhar letras, marcas e ícones. Cada mudança redesenha o contorno, e você pode exportá-lo como um SVG limpo.</p>
+        <a class="go" href="grid.html">Abrir o editor</a>
       </div>
     </article>
 
     <article class="door textures">
-      <button class="preview" id="texturePreview" type="button" aria-label="Show another texture"></button>
+      <button class="preview" id="texturePreview" type="button" aria-label="Mostrar outra textura"></button>
       <div class="body">
-        <h2>Texture generator</h2>
-        <p>Seeded random patterns built from the same cells. Choose the pattern, the seed and how much blank space it leaves, then export SVG or PNG.</p>
-        <a class="go" href="texture.html">Open the generator</a>
-        <span class="small">Click the pattern to see another.</span>
+        <h2>Gerador de texturas</h2>
+        <p>Padrões aleatórios com semente, feitos das mesmas células. Escolha o padrão, a semente e quanto espaço vazio ele deixa, depois exporte em SVG ou PNG.</p>
+        <a class="go" href="texture.html">Abrir o gerador</a>
+        <span class="small">Clique no padrão para ver outro.</span>
       </div>
     </article>
 
     <article class="door images">
       <div class="preview"><svg id="imagePreview" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
       <div class="body">
-        <h2>Image filter</h2>
-        <p>Turn a photo into a halftone of LINA dots, stems or cells, with the original beside it. Your image never leaves your computer.</p>
-        <a class="go" href="image.html">Open the filter</a>
+        <h2>Filtro de imagem</h2>
+        <p>Transforme uma foto numa retícula de pontos, hastes ou células LINA, com o original ao lado. Sua imagem nunca sai do seu computador.</p>
+        <a class="go" href="image.html">Abrir o filtro</a>
       </div>
     </article>
   </section>
 
   <section class="rules">
-    <h2>The rule</h2>
-    <p>Every shape here is a union of square cells. Its outline is then rounded by one rule, with a radius of a quarter cell, and nothing else. The image filter adds one exception, the half-cell dot, which the same rule turns into a circle.</p>
+    <h2>A regra</h2>
+    <p>Toda forma aqui é uma união de células quadradas. Seu contorno é então arredondado por uma única regra, com raio de ¼ de célula, e nada mais. O filtro de imagem acrescenta uma exceção, o ponto de meia célula, que a mesma regra transforma em círculo.</p>
     <div class="rule-grid">
       <figure>
         <svg id="ruleSteps" aria-hidden="true"></svg>
-        <figcaption>Cells snap to a half-cell grid, so they can overlap by half and form steps.</figcaption>
+        <figcaption>As células se encaixam numa grade de meia célula, então podem se sobrepor pela metade e formar degraus.</figcaption>
       </figure>
       <figure>
         <svg id="ruleFree" aria-hidden="true"></svg>
-        <figcaption>Free corners round outward.</figcaption>
+        <figcaption>Cantos livres arredondam para fora.</figcaption>
       </figure>
       <figure>
         <svg id="ruleTouch" aria-hidden="true"></svg>
-        <figcaption>Corners that meet a neighbour round inward, even when two cells only touch diagonally.</figcaption>
+        <figcaption>Cantos que encontram um vizinho arredondam para dentro, mesmo quando duas células só se tocam na diagonal.</figcaption>
       </figure>
       <figure>
         <svg id="ruleArch" aria-hidden="true"></svg>
-        <figcaption>A gap half a cell wide closes into a perfect semicircle, like the arch of the n.</figcaption>
+        <figcaption>Um vão de meia célula de largura se fecha num semicírculo perfeito, como o arco do n.</figcaption>
       </figure>
     </div>
   </section>

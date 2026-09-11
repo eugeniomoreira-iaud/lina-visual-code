@@ -1,37 +1,37 @@
-# LINA visual code
+# Código visual LINA
 
-Tools for drawing with the geometry of the LINA logo (Laboratório de Modelagem da Informação, UFC). Everything they make is built by the logo's own construction rule: square cells on a half-cell grid, ¼-cell corner radius, convex corners where a block is free and concave ones where it meets a neighbour.
+Ferramentas para desenhar com a geometria do logotipo do LINA (Laboratório de Modelagem da Informação, UFC). Tudo o que elas produzem segue a própria regra de construção do logotipo: células quadradas numa grade de meia célula, cantos com raio de ¼ de célula, convexos onde o bloco está livre e côncavos onde ele encontra um vizinho.
 
-**Use it online:** https://eugeniomoreira-iaud.github.io/lina-visual-code/
+**Use online:** https://eugeniomoreira-iaud.github.io/lina-visual-code/
 
-- **Cells** (`grid.html`): place and move cells on a grid and watch the rule round them.
-- **Textures** (`texture.html`): seeded random patterns (scatter, field, stems, glyphs) with control over blank space, format and palette.
-- **Images** (`image.html`): turn a photo into halftone squares, stems or a bitmap, with the original beside the result.
+- **Células** (`grid.html`): posicione e mova células numa grade e veja a regra arredondá-las.
+- **Texturas** (`texture.html`): padrões aleatórios com semente (dispersão, campo, hastes, glifos), com controle do espaço vazio, do formato e da paleta.
+- **Imagens** (`image.html`): transforme uma foto em retícula de quadrados, hastes ou bitmap, com o original ao lado do resultado.
 
-All three export SVG; Textures and Images also export PNG. Textures and Images keep their settings in the page address, so a copied link reproduces a result (the image itself is not in the link). Cells keeps your drawing in the browser.
+As três exportam SVG; Texturas e Imagens também exportam PNG. Texturas e Imagens guardam os ajustes no endereço da página, então um link copiado reproduz o resultado (a imagem em si não vai no link). Células guarda o desenho no navegador.
 
-## Running locally
+## Rodar localmente
 
-No build step and no dependencies. Open `index.html` in a browser, or serve the folder:
+Sem etapa de build e sem dependências. Abra `index.html` no navegador ou sirva a pasta:
 
 ```sh
 python3 -m http.server
 ```
 
-## Typeface
+## Tipografia
 
-The interface is set in Neometric, a licensed typeface that is not part of this repository. Without it the pages fall back to the system sans. To see them with the brand type on your machine, put these files in a `font/` folder at the root (it is ignored by git):
+A interface usa a Neometric, uma fonte licenciada que não faz parte deste repositório. Sem ela, as páginas usam a fonte sem serifa do sistema. Para ver as páginas com a tipografia da marca na sua máquina, coloque estes arquivos numa pasta `font/` na raiz (ela é ignorada pelo git):
 
 - `Neometric-Regular.otf`
 - `Neometric Medium (Regular).otf`
 - `Neometric Extra Bold (Bold).otf`
 
-## Layout
+## Estrutura
 
-- `lina-geometry.js`: the outline tracer shared by all three tools.
-- `lina-texture.js`, `lina-image.js`: the texture and image engines.
-- `lina-sample.js`: the sample portrait, embedded so the pages also work when opened from disk.
-- `lina.css`: shared styles.
-- `png/`: the LINA logos.
+- `lina-geometry.js`: o traçador de contornos usado pelas três ferramentas.
+- `lina-texture.js`, `lina-image.js`: os motores de textura e de imagem.
+- `lina-sample.js`: o retrato de exemplo, embutido para que as páginas funcionem também quando abertas direto do disco.
+- `lina.css`: estilos compartilhados.
+- `png/`: os logotipos do LINA.
 
-`CLAUDE.md` describes the rule in full.
+O `CLAUDE.md` descreve a regra completa (em inglês).

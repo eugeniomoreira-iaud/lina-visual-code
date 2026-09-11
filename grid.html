@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LINA cell editor</title>
+<title>Editor de células LINA</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="lina.css">
 <style>
@@ -23,34 +23,34 @@
 <aside class="sidebar">
   <a class="brand" href="index.html">
     <svg id="mark" viewBox="0 0 4 6" aria-hidden="true"></svg>
-    <div><strong>LINA</strong><span>Visual code</span></div>
+    <div><strong>LINA</strong><span>Código visual</span></div>
   </a>
-  <nav class="tools" aria-label="Tools">
-    <a href="grid.html" aria-current="page">Cells</a>
-    <a href="texture.html">Textures</a>
-    <a href="image.html">Images</a>
+  <nav class="tools" aria-label="Ferramentas">
+    <a href="grid.html" aria-current="page">Células</a>
+    <a href="texture.html">Texturas</a>
+    <a href="image.html">Imagens</a>
   </nav>
 
   <fieldset>
-    <legend>New block</legend>
+    <legend>Novo bloco</legend>
     <div class="seg" data-key="brush">
-      <button type="button" data-value="4">Cell</button>
-      <button type="button" data-value="2">Half cell</button>
+      <button type="button" data-value="4">Célula</button>
+      <button type="button" data-value="2">Meia célula</button>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Snap to</legend>
+    <legend>Encaixe</legend>
     <div class="seg" data-key="snap">
-      <button type="button" data-value="4">Cell</button>
-      <button type="button" data-value="2">Half</button>
-      <button type="button" data-value="1">Quarter</button>
+      <button type="button" data-value="4">Célula</button>
+      <button type="button" data-value="2">Meia</button>
+      <button type="button" data-value="1">Quarto</button>
     </div>
-    <p class="hint">A quarter step is for spacing separate shapes, like the letters of the wordmark. Blocks that connect must stay on the half-cell grid.</p>
+    <p class="hint">O passo de ¼ de célula serve para espaçar formas separadas, como as letras do logotipo. Blocos que se conectam devem ficar na grade de meia célula.</p>
   </fieldset>
 
   <fieldset>
-    <legend><label for="radius">Corner radius</label></legend>
+    <legend><label for="radius">Raio dos cantos</label></legend>
     <div class="range-row">
       <input id="radius" type="range" min="0" max="0.25" step="0.005">
       <output id="radiusOut" for="radius"></output>
@@ -58,57 +58,57 @@
   </fieldset>
 
   <fieldset>
-    <legend>Show</legend>
+    <legend>Mostrar</legend>
     <div class="checks">
-      <label><input type="checkbox" id="showGrid"> Grid</label>
+      <label><input type="checkbox" id="showGrid"> Grade</label>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Color</legend>
+    <legend>Cor</legend>
     <div class="swatches" data-key="color">
-      <button type="button" data-value="#9B0A0E" style="background:#9B0A0E" aria-label="Crimson"></button>
-      <button type="button" data-value="#520000" style="background:#520000" aria-label="Oxblood"></button>
-      <button type="button" data-value="#000000" style="background:#000000" aria-label="Black"></button>
+      <button type="button" data-value="#9B0A0E" style="background:#9B0A0E" aria-label="Carmim"></button>
+      <button type="button" data-value="#520000" style="background:#520000" aria-label="Vinho"></button>
+      <button type="button" data-value="#000000" style="background:#000000" aria-label="Preto"></button>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Grid size in cells</legend>
+    <legend>Tamanho da grade em células</legend>
     <div class="size">
-      <input id="cols" type="number" min="4" max="48" aria-label="Columns">
+      <input id="cols" type="number" min="4" max="48" aria-label="Colunas">
       <span>×</span>
-      <input id="rows" type="number" min="3" max="32" aria-label="Rows">
+      <input id="rows" type="number" min="3" max="32" aria-label="Linhas">
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Edit</legend>
+    <legend>Editar</legend>
     <div class="actions">
-      <button class="btn" id="undo" type="button">Undo</button>
-      <button class="btn" id="redo" type="button">Redo</button>
-      <button class="btn" id="delete" type="button">Delete block</button>
-      <button class="btn" id="clear" type="button">Clear</button>
-      <button class="btn" id="preset" type="button" style="grid-column: span 2">Load LINA wordmark</button>
+      <button class="btn" id="undo" type="button">Desfazer</button>
+      <button class="btn" id="redo" type="button">Refazer</button>
+      <button class="btn" id="delete" type="button">Apagar bloco</button>
+      <button class="btn" id="clear" type="button">Limpar</button>
+      <button class="btn" id="preset" type="button" style="grid-column: span 2">Carregar logotipo LINA</button>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend>Export</legend>
+    <legend>Exportar</legend>
     <div class="actions">
-      <button class="btn primary" id="download" type="button">Download SVG</button>
-      <button class="btn" id="copy" type="button">Copy SVG</button>
+      <button class="btn primary" id="download" type="button">Baixar SVG</button>
+      <button class="btn" id="copy" type="button">Copiar SVG</button>
     </div>
   </fieldset>
 
   <div class="notes">
-    <p>Click an empty spot to add a block. Drag a block to move it. Right-click or press <kbd>Delete</kbd> to remove it. Arrow keys nudge the selected block.</p>
-    <p>Free corners round outward. Corners that meet a neighbour, even diagonally, round inward. A block outlined in white sits a quarter cell off inside a connected shape, which the rule does not allow.</p>
+    <p>Clique num espaço vazio para adicionar um bloco. Arraste um bloco para movê-lo. Clique com o botão direito ou pressione <kbd>Delete</kbd> para apagá-lo. As setas do teclado movem o bloco selecionado.</p>
+    <p>Cantos livres arredondam para fora. Cantos que encontram um vizinho, mesmo na diagonal, arredondam para dentro. Um bloco contornado em branco está deslocado ¼ de célula dentro de uma forma conectada, o que a regra não permite.</p>
   </div>
 </aside>
 
 <main class="stage">
-  <svg id="board" xmlns="http://www.w3.org/2000/svg" aria-label="Grid board">
+  <svg id="board" xmlns="http://www.w3.org/2000/svg" aria-label="Grade de edição">
     <g id="gridLayer"></g>
     <path id="shape" fill-rule="evenodd"></path>
     <g id="cellLayer"></g>
@@ -229,9 +229,9 @@ function render() {
   const n = state.blocks.length;
   const status = $('#status');
   status.classList.toggle('warn', bad.length > 0);
-  status.textContent = n === 0 ? 'Empty grid. Click to add a block.'
-    : bad.length ? `${bad.length} block${bad.length === 1 ? ' sits' : 's sit'} a quarter cell off inside a shape`
-    : `${n} block${n === 1 ? '' : 's'}`;
+  status.textContent = n === 0 ? 'Grade vazia. Clique para adicionar um bloco.'
+    : bad.length ? `${bad.length} ${bad.length === 1 ? 'bloco deslocado' : 'blocos deslocados'} ¼ de célula dentro de uma forma`
+    : `${n} bloco${n === 1 ? '' : 's'}`;
   $('#undo').disabled = !history.length;
   $('#redo').disabled = !future.length;
   $('#delete').disabled = !selected;
@@ -252,8 +252,8 @@ function syncControls() {
 }
 
 function radiusLabel(v) {
-  const named = { 0: 'Square', 0.25: '¼ cell', 0.125: '⅛ cell' };
-  return named[v] ?? `${v.toFixed(3)} cell`;
+  const named = { 0: 'Reto', 0.25: '¼ de célula', 0.125: '⅛ de célula' };
+  return named[v] ?? `${v.toFixed(3).replace('.', ',')} de célula`;
 }
 
 /* ---------- state & history ---------- */
@@ -508,18 +508,18 @@ function toast(msg) {
 
 $('#download').addEventListener('click', () => {
   const svg = exportSVG();
-  if (!svg) return toast('Add a block before exporting.');
+  if (!svg) return toast('Adicione um bloco antes de exportar.');
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
   const a = document.createElement('a');
   a.href = url; a.download = 'lina-grid.svg';
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast('Downloaded lina-grid.svg');
+  toast('lina-grid.svg baixado');
 });
 
 $('#copy').addEventListener('click', async () => {
   const svg = exportSVG();
-  if (!svg) return toast('Add a block before exporting.');
+  if (!svg) return toast('Adicione um bloco antes de exportar.');
   try {
     await navigator.clipboard.writeText(svg);
   } catch (_) {
@@ -527,7 +527,7 @@ $('#copy').addEventListener('click', async () => {
     ta.value = svg; document.body.append(ta); ta.select();
     document.execCommand('copy'); ta.remove();
   }
-  toast('SVG copied');
+  toast('SVG copiado');
 });
 
 /* ---------- boot ---------- */

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LINA image filter</title>
+<title>Filtro de imagem LINA</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="lina.css">
 <style>
@@ -26,36 +26,36 @@
 <aside class="sidebar">
   <a class="brand" href="index.html">
     <svg id="mark" viewBox="0 0 4 6" aria-hidden="true"></svg>
-    <div><strong>LINA</strong><span>Visual code</span></div>
+    <div><strong>LINA</strong><span>Código visual</span></div>
   </a>
-  <nav class="tools" aria-label="Tools">
-    <a href="grid.html">Cells</a>
-    <a href="texture.html">Textures</a>
-    <a href="image.html" aria-current="page">Images</a>
+  <nav class="tools" aria-label="Ferramentas">
+    <a href="grid.html">Células</a>
+    <a href="texture.html">Texturas</a>
+    <a href="image.html" aria-current="page">Imagens</a>
   </nav>
 
   <fieldset>
-    <legend>Image</legend>
+    <legend>Imagem</legend>
     <div class="actions">
-      <button class="btn primary" id="upload" type="button">Upload image</button>
-      <button class="btn" id="sample" type="button">Use sample</button>
+      <button class="btn primary" id="upload" type="button">Enviar imagem</button>
+      <button class="btn" id="sample" type="button">Usar exemplo</button>
     </div>
     <input id="file" type="file" accept="image/*" hidden>
     <p class="hint" id="imageName"></p>
   </fieldset>
 
   <fieldset>
-    <legend>Filter</legend>
+    <legend>Filtro</legend>
     <div class="seg" data-key="mode">
-      <button type="button" data-value="halftone">Halftone</button>
-      <button type="button" data-value="stems">Stems</button>
+      <button type="button" data-value="halftone">Retícula</button>
+      <button type="button" data-value="stems">Hastes</button>
       <button type="button" data-value="bitmap">Bitmap</button>
     </div>
     <p class="hint" id="modeHint"></p>
   </fieldset>
 
   <fieldset>
-    <legend><label for="detail">Detail</label></legend>
+    <legend><label for="detail">Detalhe</label></legend>
     <div class="range-row">
       <input id="detail" data-num="detail" type="range" min="16" max="160" step="1">
       <output data-out="detail"></output>
@@ -64,67 +64,54 @@
 
   <div data-for="halftone stems">
     <fieldset>
-      <legend>Screen</legend>
-      <div class="seg" data-key="screen">
-        <button type="button" data-value="2">2 cells</button>
-        <button type="button" data-value="2.5">2½</button>
-        <button type="button" data-value="3">3</button>
-        <button type="button" data-value="4">4</button>
-      </div>
-      <p class="hint">Bigger screens give more steps between light and dark.</p>
-    </fieldset>
-
-    <fieldset>
-      <legend>Dots</legend>
-      <div class="checks">
-        <label><input type="checkbox" data-bool="halfDots"> Half-cell dots</label>
-        <label><input type="checkbox" data-bool="stagger"> Staggered</label>
-        <label><input type="checkbox" data-bool="merge"> Let darks merge</label>
-      </div>
-      <p class="hint">Half-cell dots are the one shape thinner than a cell, like the crossbar of the A. The corner rule makes them round. With darks merging, tones darker than 93% fill their tile and fuse into solid shapes.</p>
-    </fieldset>
-  </div>
-
-  <div data-for="halftone">
-    <fieldset>
-      <legend><label for="bridges">Diagonal bridges</label></legend>
+      <legend><label for="screen">Malha</label></legend>
       <div class="range-row">
-        <input id="bridges" data-num="bridges" type="range" min="0" max="100" step="1">
-        <output data-out="bridges"></output>
+        <input id="screen" data-num="screen" type="range" min="2" max="10" step="0.5">
+        <output data-out="screen"></output>
       </div>
-      <p class="hint" id="bridgesHint"></p>
+      <p class="hint">Malhas maiores dão mais passos entre claro e escuro.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pontos</legend>
+      <div class="checks">
+        <label><input type="checkbox" data-bool="halfDots"> Pontos de meia célula</label>
+        <label><input type="checkbox" data-bool="stagger"> Desencontrado</label>
+        <label><input type="checkbox" data-bool="merge"> Fundir escuros</label>
+      </div>
+      <p class="hint">Pontos de meia célula são a única forma mais fina que uma célula, como a travessa do A. A regra dos cantos os deixa redondos. Com Fundir escuros, tons mais escuros que 93% preenchem a casa e se fundem em formas sólidas.</p>
     </fieldset>
   </div>
 
   <div data-for="stems">
     <fieldset>
-      <legend>Direction</legend>
+      <legend>Direção</legend>
       <div class="seg" data-key="direction">
         <button type="button" data-value="vertical">Vertical</button>
         <button type="button" data-value="horizontal">Horizontal</button>
       </div>
     </fieldset>
     <fieldset>
-      <legend>Gap between stems</legend>
+      <legend>Espaço entre hastes</legend>
       <div class="seg" data-key="stemGap">
-        <button type="button" data-value="1">¼ cell</button>
-        <button type="button" data-value="2">½ cell</button>
+        <button type="button" data-value="1">¼ de célula</button>
+        <button type="button" data-value="2">½ célula</button>
       </div>
-      <p class="hint">A quarter cell, like the letters of the wordmark.</p>
+      <p class="hint">¼ de célula, como o espaço entre as letras do logotipo.</p>
     </fieldset>
   </div>
 
   <fieldset>
-    <legend>Dithering</legend>
+    <legend>Pontilhamento</legend>
     <div class="seg" data-key="dither">
-      <button type="button" data-value="none">None</button>
-      <button type="button" data-value="ordered">Ordered</button>
-      <button type="button" data-value="diffusion">Diffusion</button>
+      <button type="button" data-value="none">Nenhum</button>
+      <button type="button" data-value="ordered">Ordenado</button>
+      <button type="button" data-value="diffusion">Difusão</button>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend><label for="brightness">Brightness</label></legend>
+    <legend><label for="brightness">Brilho</label></legend>
     <div class="range-row">
       <input id="brightness" data-num="brightness" type="range" min="-100" max="100" step="1">
       <output data-out="brightness"></output>
@@ -132,7 +119,7 @@
   </fieldset>
 
   <fieldset>
-    <legend><label for="contrast">Contrast</label></legend>
+    <legend><label for="contrast">Contraste</label></legend>
     <div class="range-row">
       <input id="contrast" data-num="contrast" type="range" min="-100" max="100" step="1">
       <output data-out="contrast"></output>
@@ -140,25 +127,25 @@
   </fieldset>
 
   <fieldset>
-    <legend><label for="midtones">Midtones</label></legend>
+    <legend><label for="midtones">Meios-tons</label></legend>
     <div class="range-row">
       <input id="midtones" data-num="midtones" type="range" min="-100" max="100" step="1">
       <output data-out="midtones"></output>
     </div>
-    <p class="hint">Raise it to open up skin and faces while blacks stay black.</p>
+    <p class="hint">Aumente para clarear pele e rostos sem perder os pretos.</p>
   </fieldset>
 
   <fieldset>
-    <legend><label for="cutoff">Clear highlights</label></legend>
+    <legend><label for="cutoff">Limpar claros</label></legend>
     <div class="range-row">
       <input id="cutoff" data-num="cutoff" type="range" min="0" max="50" step="1">
       <output data-out="cutoff"></output>
     </div>
-    <p class="hint">Tones lighter than this stay as bare paper.</p>
+    <p class="hint">Tons mais claros que isso ficam como papel em branco.</p>
   </fieldset>
 
   <fieldset>
-    <legend><label for="smooth">Smooth</label></legend>
+    <legend><label for="smooth">Suavizar</label></legend>
     <div class="range-row">
       <input id="smooth" data-num="smooth" type="range" min="0" max="100" step="1">
       <output data-out="smooth"></output>
@@ -166,15 +153,15 @@
   </fieldset>
 
   <fieldset>
-    <legend>Options</legend>
+    <legend>Opções</legend>
     <div class="checks">
-      <label><input type="checkbox" data-bool="original"> Original beside it</label>
-      <label><input type="checkbox" data-bool="invert"> Invert</label>
+      <label><input type="checkbox" data-bool="original"> Original ao lado</label>
+      <label><input type="checkbox" data-bool="invert"> Inverter</label>
     </div>
   </fieldset>
 
   <fieldset>
-    <legend><label for="radius">Corner radius</label></legend>
+    <legend><label for="radius">Raio dos cantos</label></legend>
     <div class="range-row">
       <input id="radius" data-num="radius" type="range" min="0" max="0.25" step="0.005">
       <output data-out="radius"></output>
@@ -182,31 +169,31 @@
   </fieldset>
 
   <fieldset>
-    <legend>Colors</legend>
+    <legend>Cores</legend>
     <div class="swatches palettes" id="palettes"></div>
   </fieldset>
 
   <fieldset>
-    <legend>Export</legend>
+    <legend>Exportar</legend>
     <div class="actions">
-      <button class="btn primary" id="svg" type="button">Download SVG</button>
-      <button class="btn" id="png" type="button">Download PNG</button>
-      <button class="btn" id="copy" type="button">Copy SVG</button>
-      <button class="btn" id="link" type="button">Copy link</button>
+      <button class="btn primary" id="svg" type="button">Baixar SVG</button>
+      <button class="btn" id="png" type="button">Baixar PNG</button>
+      <button class="btn" id="copy" type="button">Copiar SVG</button>
+      <button class="btn" id="link" type="button">Copiar link</button>
     </div>
     <div class="checks" style="margin-top:10px">
-      <label><input type="checkbox" data-bool="transparent"> Transparent background</label>
+      <label><input type="checkbox" data-bool="transparent"> Fundo transparente</label>
     </div>
   </fieldset>
 
   <div class="notes">
-    <p>Your image is processed in this browser and never uploaded anywhere. The copied link keeps the settings, not the image.</p>
+    <p>Sua imagem é processada neste navegador e nunca é enviada a lugar nenhum. O link copiado guarda as configurações, não a imagem.</p>
   </div>
 </aside>
 
 <main class="stage" id="stage">
-  <canvas id="view" aria-label="Original image and filtered result"></canvas>
-  <div class="drop" id="drop" hidden>Drop to filter this image</div>
+  <canvas id="view" aria-label="Imagem original e resultado filtrado"></canvas>
+  <div class="drop" id="drop" hidden>Solte para filtrar esta imagem</div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </main>
 
@@ -221,14 +208,14 @@ const STORE = 'lina-image-v1';
 const PHOTO = 'lina-image-photo-v2';
 
 const MODE_HINTS = {
-  halftone: 'A grid of dots that grow with the darkness of the image.',
-  stems: 'Bars one cell wide, cut shorter where the image is lighter.',
-  bitmap: 'Two tones: every part of the image is either ink or paper.',
+  halftone: 'Uma grade de pontos que crescem conforme a imagem escurece.',
+  stems: 'Barras de uma célula de largura, mais curtas onde a imagem é mais clara.',
+  bitmap: 'Dois tons: cada parte da imagem é tinta ou papel.',
 };
-const NOUNS = { halftone: 'dots', stems: 'stems', bitmap: 'cells' };
+const NOUNS = { halftone: 'pontos', stems: 'hastes', bitmap: 'células' };
 
 const DEFAULTS = {
-  mode: 'halftone', detail: 84, screen: '3', halfDots: true, stagger: false, merge: false, bridges: 30,
+  mode: 'halftone', detail: 84, screen: 3, halfDots: true, stagger: false, merge: false,
   direction: 'vertical', stemGap: '1', dither: 'diffusion',
   brightness: 0, contrast: 0, midtones: 35, cutoff: 8, smooth: 30, invert: false, original: true,
   radius: 0.25, palette: 1, transparent: false,
@@ -266,8 +253,7 @@ function readStore() {
 }
 
 const engineOptions = () => ({
-  mode: p.mode, detail: p.detail, screen: Number(p.screen), halfDots: p.halfDots, stagger: p.stagger, merge: p.merge,
-  bridges: p.bridges / 100,
+  mode: p.mode, detail: p.detail, screen: p.screen, halfDots: p.halfDots, stagger: p.stagger, merge: p.merge,
   direction: p.direction, stemGap: Number(p.stemGap), dither: p.dither,
   brightness: p.brightness / 100, contrast: p.contrast / 100, midtones: p.midtones / 100,
   cutoff: p.cutoff / 100, smooth: p.smooth / 100,
@@ -291,8 +277,8 @@ function setSource(drawable, label, keep) {
   g.drawImage(drawable, 0, 0, w, h);
   src = LinaImage.prepare(g.getImageData(0, 0, w, h));
   $('#imageName').textContent = label
-    ? `${label}. Upload another, or drop or paste one anywhere.`
-    : 'Sample portrait. Upload your own photo, or drop or paste one anywhere.';
+    ? `${label}. Envie outra, ou solte ou cole uma em qualquer lugar.`
+    : 'Retrato de exemplo. Envie sua foto, ou solte ou cole uma em qualquer lugar.';
   if (keep) {
     try { localStorage.setItem(PHOTO, JSON.stringify({ label, data: sourceCanvas.toDataURL('image/jpeg', 0.85) })); }
     catch (_) { try { localStorage.removeItem(PHOTO); } catch (__) {} }
@@ -314,10 +300,10 @@ const loadImage = (url) => new Promise((resolve, reject) => {
 
 async function loadFile(file) {
   if (!file) return;
-  if (!file.type.startsWith('image/')) { toast('That file is not an image.'); return; }
+  if (!file.type.startsWith('image/')) { toast('Esse arquivo não é uma imagem.'); return; }
   const url = URL.createObjectURL(file);
-  try { setSource(await loadImage(url), file.name || 'Pasted image', true); }
-  catch (_) { toast('This image could not be opened. Try a JPG or PNG.'); }
+  try { setSource(await loadImage(url), file.name || 'Imagem colada', true); }
+  catch (_) { toast('Não foi possível abrir esta imagem. Tente um JPG ou PNG.'); }
   finally { URL.revokeObjectURL(url); }
 }
 
@@ -388,7 +374,7 @@ function paint() {
     }
     ctx.font = '500 12.5px Neometric, ui-sans-serif, system-ui, sans-serif';
     ctx.fillStyle = 'rgba(82, 0, 0, .62)';
-    ctx.fillText(f.kind === 'original' ? 'Original' : `Filtered, ${result.label}`, f.x, f.y + h + 19);
+    ctx.fillText(f.kind === 'original' ? 'Original' : `Filtrada, ${result.label}`, f.x, f.y + h + 19);
   }
 }
 new ResizeObserver(paint).observe(stage);
@@ -397,13 +383,13 @@ new ResizeObserver(paint).observe(stage);
 
 const FORMAT_OUT = {
   detail: (v) => `${v} ${NOUNS[p.mode]}`,
+  screen: (v) => `${Math.floor(v)}${v % 1 ? '½' : ''} células`,
   brightness: (v) => (v > 0 ? '+' + v : String(v)),
   contrast: (v) => (v > 0 ? '+' + v : String(v)),
   midtones: (v) => (v > 0 ? '+' + v : String(v)),
   cutoff: (v) => v + '%',
   smooth: (v) => v + '%',
-  bridges: (v) => v + '%',
-  radius: (v) => ({ 0: 'Square', 0.25: '¼ cell', 0.125: '⅛ cell' })[v] ?? `${v.toFixed(3)} cell`,
+  radius: (v) => ({ 0: 'Reto', 0.25: '¼ de célula', 0.125: '⅛ de célula' })[v] ?? `${v.toFixed(3).replace('.', ',')} de célula`,
 };
 
 function syncControls() {
@@ -417,10 +403,6 @@ function syncControls() {
   document.querySelectorAll('[data-for]').forEach((box) => { box.hidden = !box.dataset.for.split(' ').includes(p.mode); });
   document.querySelectorAll('#palettes button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === p.palette)));
   $('#modeHint').textContent = MODE_HINTS[p.mode];
-  $('#bridges').disabled = p.stagger;
-  $('#bridgesHint').textContent = p.stagger
-    ? 'Staggered rows never line up corner to corner, so there are no bridges. Turn off Staggered to use them.'
-    : 'Around half tone, full squares alternate with empty tiles and join corner to corner with a neck. Higher values widen the band.';
 }
 
 function update() { syncControls(); schedule(); writeHash(); }
@@ -490,7 +472,7 @@ function download(blob, name) {
   a.href = url; a.download = name;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast('Downloaded ' + name);
+  toast('Baixado: ' + name);
 }
 
 // One cell = 20 units in the exported file.
@@ -529,8 +511,8 @@ async function copyText(text, done) {
   }
   toast(done);
 }
-$('#copy').addEventListener('click', () => { if (result) copyText(svgString(), 'SVG copied'); });
-$('#link').addEventListener('click', () => copyText(location.href, 'Link copied. It keeps the settings, not the image.'));
+$('#copy').addEventListener('click', () => { if (result) copyText(svgString(), 'SVG copiado'); });
+$('#link').addEventListener('click', () => copyText(location.href, 'Link copiado. Ele guarda as configurações, não a imagem.'));
 
 /* ---------- boot ---------- */
 

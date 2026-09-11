@@ -4,9 +4,8 @@
   Units: 1 unit = ¼ cell. The photo becomes a darkness map. Each screen tile
   picks a square dot from a ladder of sizes in half-cell steps. This is the one
   tool where blocks vary in size. Dots never share an edge, but separate dots
-  may sit ¼ cell apart, like the letters of the wordmark. Around half tone,
-  full squares can alternate with empty tiles so their corners bridge, and the
-  darkest tones can fuse into solids. Dots are at least a whole cell, with one opt-in exception:
+  may sit ¼ cell apart, like the letters of the wordmark. The darkest tones can
+  fuse into solids. Dots are at least a whole cell, with one opt-in exception:
   the half-cell dot, which the corner rule turns into a circle, the way the
   A's crossbar is half a cell.
 */
@@ -14,16 +13,16 @@
   'use strict';
 
   const PALETTES = [
-    { name: 'Crimson on white', bg: '#FFFFFF', fg: '#9B0A0E' },
-    { name: 'Oxblood on paper', bg: '#F1EDE6', fg: '#520000' },
-    { name: 'White on crimson', bg: '#9B0A0E', fg: '#FFFFFF' },
-    { name: 'Crimson on oxblood', bg: '#520000', fg: '#9B0A0E' },
-    { name: 'Black on white', bg: '#FFFFFF', fg: '#000000' },
-    { name: 'White on black', bg: '#000000', fg: '#FFFFFF' },
+    { name: 'Carmim sobre branco', bg: '#FFFFFF', fg: '#9B0A0E' },
+    { name: 'Vinho sobre papel', bg: '#F1EDE6', fg: '#520000' },
+    { name: 'Branco sobre carmim', bg: '#9B0A0E', fg: '#FFFFFF' },
+    { name: 'Carmim sobre vinho', bg: '#520000', fg: '#9B0A0E' },
+    { name: 'Preto sobre branco', bg: '#FFFFFF', fg: '#000000' },
+    { name: 'Branco sobre preto', bg: '#000000', fg: '#FFFFFF' },
   ];
 
   const DEFAULTS = {
-    mode: 'halftone', detail: 84, screen: 3, halfDots: true, stagger: false, merge: false, bridges: 0.3,
+    mode: 'halftone', detail: 84, screen: 3, halfDots: true, stagger: false, merge: false,
     direction: 'vertical', stemGap: 1, dither: 'diffusion',
     brightness: 0, contrast: 0, midtones: 0.35, cutoff: 0.08, smooth: 0.3, invert: false, radius: 0.25,
   };
@@ -149,11 +148,6 @@
     const t = raw.map((v) => v * top);
     const levels = quantize(cols, ny, t, cov, p.dither);
 
-    // Bridges: around half tone, full tiles alternate with empty ones, so every full
-    // square meets its four diagonal neighbours corner to corner and the rule joins them
-    // with a neck. Ink stays at half, so tone is kept; `bridges` widens the band.
-    // Staggered rows never line up corner to corner, so they get no bridges.
-    const band = p.bridges > 0 && !shift ? 0.05 + 0.07 * p.bridges : -1;
     // Solid: the darkest tones fill their tile and fuse.
     const solidFrom = p.merge ? 0.93 : 2;
     let edgeRoom = shift ? Math.min(T - shift, shift) - 1 : 0;
@@ -164,7 +158,6 @@
       const i = k % cols, j = (k - i) / cols;
       let s = sizes[levels[k]][0], kind = 0;
       if (raw[k] >= solidFrom) { s = T; kind = 2; }
-      else if (Math.abs(t[k] - 0.5) <= band) { s = (i + j) & 1 ? 0 : T; kind = 1; }
       if (!s) continue;
       const tx = xAt(i, j), ty = j * T;
       let x = tx + ((T - s) >> 1), y = ty + ((T - s) >> 1);
@@ -181,7 +174,7 @@
 
     const bits = new Uint8Array(U * V);
     for (const d of dots) if (d) fill(bits, U, V, d.x, d.y, d.s, d.s);
-    return { bits, U, V, label: `${nx} × ${ny} dots` };
+    return { bits, U, V, label: `${nx} × ${ny} pontos` };
   }
 
   // Dots may share an edge only when both are solid. Any other side contact shrinks
@@ -266,7 +259,7 @@
       if (vertical) fill(bits, U, V, a * P, s, CELL, len);
       else fill(bits, U, V, s, a * P, len, CELL);
     }
-    return { bits, U, V, label: `${n} stems` };
+    return { bits, U, V, label: `${n} hastes` };
   }
 
   // Two tones. Without dithering the edge follows the image at half-cell precision,
@@ -305,7 +298,7 @@
         const k = 2 * y * U + 2 * x;
         bits[k] = bits[k + 1] = bits[k + U] = bits[k + U + 1] = 1;
       }
-    return { bits, U, V, label: `${cw} × ${ch} cells` };
+    return { bits, U, V, label: `${cw} × ${ch} células` };
   }
 
   const FILTERS = { halftone, stems, bitmap };
