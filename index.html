@@ -9,7 +9,8 @@
 <style>
   /* Two vertical lines come from the logo: panels start at the L's stem (the wrap edge),
      text starts at the L's foot (--foot, measured from the lockup by the script). */
-  :root { --foot: 0px; }
+  /* --cell is the emergence figure's letter cell, measured by the script; every frame rounds by ¼ of it. */
+  :root { --foot: 0px; --cell: 44px; }
   .wrap { padding-inline: clamp(20px, 4vw, 64px); }
   .foot { padding-left: var(--foot); }
   body { overflow-x: hidden; }
@@ -43,6 +44,12 @@
   .system-formula { margin: 28px 0 0; font-size: clamp(26px, 2.7vw, 36px); }
   .emerge { margin: 0; padding: clamp(28px, 5vw, 70px); background: var(--oxblood); color: #F3B6B0; }
   .emerge svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .door, .rule-grid figure, .emerge { border-radius: calc(var(--cell) / 4); }
+  .emerge { position: relative; isolation: isolate; }
+  .emerge.traced { background: none; }
+  .emerge .emerge-frame { position: absolute; left: 0; top: 0; z-index: -1; width: auto; height: auto; overflow: visible; pointer-events: none; }
+  .frame-float { float: left; }
+  .frame-float.right { float: right; }
   .emerge-controls {
     display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
     margin-top: clamp(16px, 2.4vw, 28px); font-size: 14px; font-weight: 500;
@@ -598,6 +605,80 @@ new ResizeObserver(([entry]) => {
   if (!reduce && 'IntersectionObserver' in window) {
     new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) run(); else halt(); }, { threshold: 0.3 }).observe(svg);
   }
+})();
+
+// The emergence frame: one block on the figure's cell, with a few cells joined to it that reach
+// into a gutter and into the text around, traced once by the rule. The cell matches the letters'
+// cell in the figure; every frame on the page rounds by ¼ of it (--cell). Paragraphs under the
+// frame wrap around the cells that reach into them.
+(function () {
+  const fig = document.querySelector('.emerge'), art = document.getElementById('emerge');
+  const NS = 'http://www.w3.org/2000/svg', M = 12; // bitmap margin around the frame: 3 cells, in ¼-cell units
+  const frame = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+  frame.setAttribute('class', 'emerge-frame'); frame.setAttribute('aria-hidden', 'true');
+  path.setAttribute('fill', OXBLOOD);
+  frame.append(path); fig.prepend(frame);
+  const rand = Array.from({ length: 16 }, Math.random); // one draw per load, reapplied at every size
+  const floats = [];
+  function layout() {
+    if (!art.clientWidth) return;
+    fig.style.minHeight = '';
+    floats.splice(0).forEach((f) => f.remove());
+    const natural = fig.getBoundingClientRect();
+    const n = 2 * Math.round(natural.width / (2 * art.clientWidth / 103)); // frame width in units, whole half cells
+    const u = natural.width / n, cell = 4 * u, gap = Math.max(cell / 2, 8);
+    const H = 2 * Math.ceil(natural.height / (2 * u) - 1e-3); // height padded up to whole half cells
+    fig.style.minHeight = H * u + 'px';
+    const box = fig.getBoundingClientRect(); // again: the new height can move the page (scroll anchoring)
+    document.documentElement.style.setProperty('--cell', cell.toFixed(2) + 'px');
+    const W = n + 2 * M, V = H + 2 * M, bits = new Uint8Array(W * V);
+    const block = (x, y, w, h) => {
+      for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) bits[(j + M) * W + i + M] = 1;
+    };
+    const snap = (px) => 2 * Math.round(px / (2 * u)); // px from the frame's edge to units on the half-cell grid
+    const pad = (el, side) => parseFloat(getComputedStyle(el)['padding' + side]);
+    block(0, 0, n, H);
+    // Above: up to two cells in the empty space a shorter column leaves over the frame.
+    for (const item of document.querySelectorAll('.concept-opening > *')) {
+      const r = item.getBoundingClientRect();
+      if (box.top - r.bottom > 2) continue;
+      const range = document.createRange(); range.selectNodeContents(item);
+      const d = Math.min(2, Math.floor((r.bottom - range.getBoundingClientRect().bottom - gap) / cell));
+      const lo = snap(r.left + pad(item, 'Left') - box.left), hi = snap(r.right - pad(item, 'Right') - box.left) - 4;
+      if (d >= 1 && hi >= lo) block(lo + 2 * Math.floor(rand[8] * ((hi - lo) / 2 + 1)), -4 * d, 4, 4 * d);
+    }
+    // Side: one cell into a gutter, when the gutter holds it.
+    if (Math.min(box.left, document.documentElement.clientWidth - box.right) >= cell + 4) {
+      const h = rand[15] < .5 ? 4 : 8, y = 2 + 2 * Math.floor(rand[10] * ((H - h - 4) / 2 + 1));
+      block(rand[9] < .5 ? -4 : n, y, 4, h);
+    }
+    // Below: two cells reach over a text edge of the paragraphs under the frame; the text wraps around.
+    const bottom = box.top + H * u, edges = [];
+    for (const p of document.querySelectorAll('.reading p')) {
+      const r = p.getBoundingClientRect(), top = r.top + pad(p, 'Top');
+      if (Math.abs(r.top - bottom) > 2) continue;
+      edges.push({ p, top, right: false, x: r.left + pad(p, 'Left') }, { p, top, right: true, x: r.right - pad(p, 'Right') });
+    }
+    edges.map((e, q) => [rand[q], e]).sort((a, b) => a[0] - b[0]).slice(0, 2).forEach(([, e], q) => {
+      const w = rand[11 + q] < .5 ? 4 : 8, d = rand[13 + q] < .5 ? 8 : 12;
+      const x = Math.min(n - w, Math.max(0, snap(e.x - box.left) + (e.right ? 2 - w : -2)));
+      block(x, H, w, d);
+      const fw = e.right ? e.x - box.left - x * u + gap : box.left + (x + w) * u + gap - e.x;
+      const fh = bottom + d * u + gap - e.top;
+      if (fw <= 0 || fh <= 0) return;
+      const f = document.createElement('span');
+      f.className = 'frame-float' + (e.right ? ' right' : ''); f.setAttribute('aria-hidden', 'true');
+      f.style.width = fw + 'px'; f.style.height = fh + 'px';
+      e.p.prepend(f); floats.push(f);
+    });
+    // The svg box is the figure's; cells outside it paint through overflow, so they add no scroll width.
+    frame.setAttribute('viewBox', `0 0 ${n} ${H}`);
+    frame.setAttribute('width', n * u); frame.setAttribute('height', H * u);
+    path.setAttribute('d', LinaGeometry.traceBitmap(bits, W, V, 1, { ox: -M, oy: -M }));
+    fig.classList.add('traced');
+  }
+  new ResizeObserver(() => requestAnimationFrame(layout)).observe(fig);
+  document.fonts.ready.then(layout);
 })();
 
 function gridLines(w, h) {
