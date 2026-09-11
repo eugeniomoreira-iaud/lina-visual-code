@@ -2,7 +2,7 @@
 
 Ferramentas para desenhar com a geometria do logotipo do LINA (Laboratório de Modelagem da Informação, UFC). Tudo o que elas produzem segue a própria regra de construção do logotipo: células quadradas numa grade de meia célula, cantos com raio de ¼ de célula, convexos onde o bloco está livre e côncavos onde ele encontra um vizinho. A exceção é o pontilhado, o padrão do banner da página inicial, cujos pontos variam de tamanho.
 
-**Use online:** https://eugeniomoreira-iaud.github.io/lina-visual-code/
+**Use online:** https://lina-ufc.github.io/lina-visual-code/
 
 - **Células** (`grid.html`): posicione e mova células numa grade e veja a regra arredondá-las.
 - **Texturas** (`texture.html`): padrões aleatórios com semente (dispersão, campo, pontilhado, glifos), com controle do espaço vazio, do formato e da paleta.
