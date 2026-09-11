@@ -232,9 +232,9 @@ new ResizeObserver(([entry]) => {
 }).observe(document.getElementById('wordmark'));
 
 // Emergence: the wordmark's cells start scattered at random and fly to their places,
-// landing at almost the same moment. Quarter-cell units. Separate shapes glide freely;
-// inside a shape, cells keep whole half cells between them, so every outline stays on the
-// rule's grid. Start points are drawn until no cell brushes a cell of another letter on
+// landing at almost the same moment. Quarter-cell units. Cells move freely and, in motion,
+// the cells of one letter blend like liquid; at rest the exact outline traced by the rule
+// takes over. Start points are drawn until no cell comes near a cell of another letter on
 // the way.
 (function () {
   const cells = [];
@@ -243,13 +243,12 @@ new ResizeObserver(([entry]) => {
     for (const [bx, by, s] of LETTERS[k].blocks) cells.push({ x: (x + bx) * 2, y: by * 2, s: s * 2, letter: k });
     x += LETTERS[k].w + LETTER_GAP;
   }
-  const EPS = 1e-6, STAGGER = 0.12, FLIGHT = 1 - STAGGER, VIEW = { x0: -31, x1: 68, y0: -18, y1: 30 };
-  const touch = (a, b) => a.x <= b.x + b.s + EPS && b.x <= a.x + a.s + EPS && a.y <= b.y + b.s + EPS && b.y <= a.y + a.s + EPS;
+  const STAGGER = 0.12, FLIGHT = 1 - STAGGER, BLEND = 0.7, VIEW = { x0: -31, x1: 68, y0: -18, y1: 30 };
   const gapOf = (a, b) => Math.max(a.x - b.x - b.s, b.x - a.x - a.s, a.y - b.y - b.s, b.y - a.y - a.s);
   const ease = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(2 - 2 * u, 3) / 2);
   const at = (c, m, t) => {
     const e = ease(Math.min(1, Math.max(0, (t - m.delay) / FLIGHT)));
-    return { s: c.s, x: m.x + (c.x - m.x) * e, y: m.y + (c.y - m.y) * e, left: 1 - e };
+    return { s: c.s, x: m.x + (c.x - m.x) * e, y: m.y + (c.y - m.y) * e };
   };
 
   function tryPlan(seed) {
@@ -278,7 +277,7 @@ new ResizeObserver(([entry]) => {
         const t = t0 + ((t1 - t0) * s) / STEPS;
         const p = at(c, m, t), q = at(d, n, t);
         if (gapOf(p, q) >= 0.8) continue;
-        // Cells of one letter may meet on the way: the outline keeps them on the half-cell grid.
+        // Cells of one letter may meet on the way; they blend into each other.
         if (c.letter !== d.letter) return false;
       }
       return true;
@@ -292,22 +291,21 @@ new ResizeObserver(([entry]) => {
           y: Math.round(VIEW.y0 + rand() * (VIEW.y1 - c.s - VIEW.y0)),
           delay: rand() * STAGGER,
         };
-        m.dist = Math.hypot(c.x - m.x, c.y - m.y);
         if (fits(c, m)) pick = m;
       }
       const x0 = Math.ceil(a0);
-      plan[i] = pick || { x: x0, y: VIEW.y0, delay: 0, dist: Math.hypot(c.x - x0, c.y - VIEW.y0), fallback: true };
+      plan[i] = pick || { x: x0, y: VIEW.y0, delay: 0, fallback: true };
       placed.push(i);
     });
     return plan;
   }
-  // Snapping a shape to the grid can nudge a cell by up to ¼ cell, so check the drawn frames too.
-  const touchesAcross = (use) => {
+  // A second, finer pass over the whole flight: letters must never come near each other.
+  const closeAcross = (use) => {
     let n = 0;
     for (let s = 0; s <= 400; s++) {
-      const list = layout(s / 400, use).at;
+      const list = positions(s / 400, use);
       for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++)
-        if (cells[i].letter !== cells[j].letter && touch(list[i], list[j])) n++;
+        if (cells[i].letter !== cells[j].letter && gapOf(list[i], list[j]) < 0.8) n++;
     }
     return n;
   };
@@ -316,7 +314,7 @@ new ResizeObserver(([entry]) => {
     let best = null;
     for (let attempt = 0; attempt < 12; attempt++) {
       const p = tryPlan(seed + attempt * 7919);
-      const misses = p.filter((m) => m.fallback).length + touchesAcross(p);
+      const misses = p.filter((m) => m.fallback).length + closeAcross(p);
       if (!best || misses < best.misses) best = { p, misses };
       if (!misses) break;
     }
@@ -324,26 +322,17 @@ new ResizeObserver(([entry]) => {
   }
   let plan = makePlan(Math.floor(Math.random() * 4294967296));
 
-  // Groups of touching cells; each is drawn from the cell nearest its place, the others snapped to it.
-  function layout(t, use = plan) {
-    const list = cells.map((c, i) => at(c, use[i], t));
+  // Positions at time t (0 = scatter, 1 = logo). Cells move freely; nothing snaps.
+  function positions(t, use = plan) {
+    return cells.map((c, i) => at(c, use[i], t));
+  }
+  // Shapes as the eye sees them: cells of one letter closer than the blend's reach count as one.
+  function shapeCount(list) {
     const p = list.map((_, i) => i);
     const root = (i) => (p[i] === i ? i : (p[i] = root(p[i])));
-    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) if (touch(list[i], list[j])) p[root(i)] = root(j);
-    const members = new Map();
-    list.forEach((_, i) => { const r = root(i); if (!members.has(r)) members.set(r, []); members.get(r).push(i); });
-    const groups = [...members.values()].map((ids) => {
-      const a = list[ids.reduce((b, i) => (list[i].left < list[b].left ? i : b))];
-      const ax = a.x, ay = a.y;
-      const blocks = ids.map((i) => {
-        const c = list[i];
-        const rel = { x: 2 * Math.round((c.x - ax) / 2), y: 2 * Math.round((c.y - ay) / 2), s: c.s };
-        c.x = ax + rel.x; c.y = ay + rel.y;
-        return rel;
-      });
-      return { x: ax, y: ay, blocks };
-    });
-    return { at: list, groups };
+    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++)
+      if (cells[i].letter === cells[j].letter && gapOf(list[i], list[j]) < BLEND) p[root(i)] = root(j);
+    return new Set(list.map((_, i) => root(i))).size;
   }
 
   const NS = 'http://www.w3.org/2000/svg';
@@ -351,16 +340,55 @@ new ResizeObserver(([entry]) => {
   const input = document.getElementById('relation');
   const out = document.getElementById('emergeCount');
   svg.setAttribute('viewBox', '-33 -20 103 52');
-  const shape = document.createElementNS(NS, 'path');
-  shape.setAttribute('fill', CRIMSON);
-  shape.setAttribute('fill-rule', 'evenodd');
-  svg.append(shape);
+  // In motion, each letter's cells are blurred together and cut back to a sharp edge, so they
+  // flow into one another; a blur of 0.55 unit gives corners close to the ¼-cell arc. Letters
+  // get separate filters, so they never blend. At rest the exact outline fades in over the blend.
+  svg.innerHTML = '<defs><filter id="emergeGoo" x="-0.3" y="-0.3" width="1.6" height="1.6" color-interpolation-filters="sRGB">' +
+    '<feGaussianBlur stdDeviation="0.55"/>' +
+    '<feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -9"/></filter></defs>';
+  const liquid = document.createElementNS(NS, 'g');
+  svg.append(liquid);
+  const rects = [];
+  for (const k of ['L', 'I', 'n', 'A']) {
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('filter', 'url(#emergeGoo)');
+    g.setAttribute('fill', CRIMSON);
+    cells.forEach((c, i) => {
+      if (c.letter !== k) return;
+      const r = document.createElementNS(NS, 'rect');
+      r.setAttribute('width', c.s);
+      r.setAttribute('height', c.s);
+      g.append(r);
+      rects[i] = r;
+    });
+    liquid.append(g);
+  }
+  const exact = document.createElementNS(NS, 'path');
+  exact.setAttribute('fill', CRIMSON);
+  exact.setAttribute('fill-rule', 'evenodd');
+  svg.append(exact);
+  const logoPath = outlinePath(cells, 1);
+  let startFor = null, startPath = '';
+  const startOutline = () => {
+    if (startFor !== plan) {
+      startFor = plan;
+      startPath = outlinePath(cells.map((c, i) => ({ x: plan[i].x, y: plan[i].y, s: c.s })), 1);
+    }
+    return startPath;
+  };
+  const ramp = (a, b, v) => { const u = Math.min(1, Math.max(0, (v - a) / (b - a))); return u * u * (3 - 2 * u); };
   let lastCount = 0;
   function draw() {
-    const { groups } = layout(input.value / 1000);
-    shape.setAttribute('d', groups.map((g) => outlinePath(g.blocks, 1, 1, g.x, g.y)).join(''));
-    if (groups.length === lastCount) return;
-    lastCount = groups.length;
+    const t = input.value / 1000;
+    const list = positions(t);
+    list.forEach((c, i) => { rects[i].setAttribute('x', c.x.toFixed(3)); rects[i].setAttribute('y', c.y.toFixed(3)); });
+    const fade = Math.max(ramp(0.93, 1, t), 1 - ramp(0, 0.07, t));
+    if (fade > 0) exact.setAttribute('d', t > 0.5 ? logoPath : startOutline());
+    exact.style.opacity = fade;
+    liquid.style.display = fade >= 1 ? 'none' : '';
+    const n = shapeCount(list);
+    if (n === lastCount) return;
+    lastCount = n;
     const text = `${cells.length} células, ${lastCount} ${lastCount === 1 ? 'forma' : 'formas'}`;
     out.value = text;
     input.setAttribute('aria-valuetext', text);
