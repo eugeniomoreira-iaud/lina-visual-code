@@ -7,11 +7,19 @@
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="lina.css">
 <style>
+  /* Two vertical lines come from the logo: panels start at the L's stem (the wrap edge),
+     text starts at the L's foot (--foot, measured from the lockup by the script). */
+  :root { --foot: 0px; }
   .wrap { max-width: 1240px; margin: 0 auto; padding-inline: clamp(20px, 5vw, 56px); }
+  .foot { padding-left: var(--foot); }
+
+  .topnav { display: flex; justify-content: flex-end; gap: 28px; padding-block: 22px 0; font-size: 15px; font-weight: 500; }
+  .topnav a { text-decoration: none; padding-block: 4px; }
+  .topnav a:hover { color: var(--crimson); text-decoration: underline; text-underline-offset: 5px; }
 
   /* The lockup mirrors the logo: the name starts where the L's foot starts. */
   .hero {
-    padding-block: clamp(44px, 10vh, 112px) clamp(40px, 8vh, 80px);
+    padding-block: clamp(24px, 6vh, 72px) clamp(40px, 8vh, 80px);
     display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 48px; align-items: end;
   }
   .lockup { max-width: 700px; }
@@ -22,55 +30,100 @@
     line-height: 1.04; letter-spacing: -.012em; color: var(--crimson);
   }
   .lockup .tagline { margin-top: .9em; font-size: clamp(12px, 1.4vw, 18px); letter-spacing: .24em; color: var(--oxblood); }
-  .intro { margin: 0; font-size: 17px; line-height: 1.55; max-width: 36ch; }
+  .intro { margin: 0; font-size: 17px; line-height: 1.55; max-width: 34ch; }
 
-  /* One door per tool. */
-  .doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  /* The concept: a statement, then the figure that performs it, then the reading of it. */
+  .concept { padding-block: clamp(24px, 5vh, 56px) clamp(64px, 11vh, 120px); }
+  .concept h2 {
+    margin: 0; max-width: 22ch; text-wrap: balance; font-size: clamp(32px, 4.6vw, 58px); font-weight: 800;
+    line-height: 1.02; letter-spacing: -.022em; color: var(--crimson);
+  }
+  .concept .lead { margin: 28px 0 0; max-width: 62ch; font-size: clamp(17px, 1.55vw, 20px); line-height: 1.55; }
+  .emerge { margin: clamp(36px, 6vh, 56px) 0 0; padding: clamp(18px, 3vw, 40px); background: var(--blush); border-radius: 22px; }
+  .emerge svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .emerge-controls {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
+    margin-top: clamp(16px, 2.4vw, 28px); font-size: 14px; font-weight: 500;
+  }
+  .emerge-controls input { width: 100%; }
+  .emerge-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  .emerge-foot figcaption { margin: 0; max-width: none; font-size: inherit; }
+  .emerge-foot output { font-variant-numeric: tabular-nums; min-width: 0; text-align: left; font-size: inherit; }
+  .reading { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 48px; margin-top: clamp(32px, 5vh, 48px); }
+  .reading p { margin: 0; max-width: 48ch; font-size: 16px; line-height: 1.62; }
+
+  .section-title { margin: 0 0 24px; font-size: 26px; font-weight: 800; color: var(--crimson); letter-spacing: -.01em; }
+
+  /* The tools: an asymmetric trio, one door per tool. */
+  .doors {
+    display: grid; gap: 16px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas: "editor images" "textures images";
+  }
   .door { border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
-  .door.editor { background: var(--blush); }
-  .door.textures { background: var(--crimson); color: var(--paper); }
-  .door.images { background: #F1EDE6; }
-  .door.images h2 { color: var(--oxblood); }
+  .door.editor { grid-area: editor; background: var(--blush); flex-direction: row; }
+  .door.textures { grid-area: textures; background: var(--crimson); color: var(--paper); flex-direction: row; }
+  .door.images { grid-area: images; background: #F1EDE6; }
+  .door.images h3 { color: var(--oxblood); }
   .images .go { background: var(--oxblood); color: var(--paper); }
   .images .go:hover { background: var(--crimson); }
-  .preview { display: block; width: 100%; aspect-ratio: 16 / 10; }
+  .preview { display: block; width: 100%; }
   .preview svg { display: block; width: 100%; height: 100%; }
+  .editor .preview, .textures .preview { flex: 0 0 48%; min-height: 250px; }
+  .images .preview { flex: 1 1 auto; min-height: 300px; }
   button.preview { border: 0; padding: 0; margin: 0; background: none; cursor: pointer; }
   .door .body { padding: 26px 28px 30px; display: grid; gap: 10px; align-content: start; }
-  .door h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
-  .door.editor h2 { color: var(--crimson); }
+  .door h3 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
+  .door.editor h3 { color: var(--crimson); }
   .door p { margin: 0; max-width: 46ch; font-size: 15px; }
   .door .go {
     justify-self: start; margin-top: 10px; text-decoration: none; font-weight: 500; font-size: 15px;
-    padding: 11px 18px; border-radius: 10px;
+    padding: 11px 18px; border-radius: 10px; white-space: nowrap;
   }
   .editor .go { background: var(--crimson); color: var(--paper); }
   .editor .go:hover { background: var(--oxblood); }
   .textures .go { background: var(--paper); color: var(--crimson); }
   .textures .go:hover { background: var(--blush); }
-  .textures .go:focus-visible { outline-color: var(--paper); }
+  .textures .go:focus-visible, .textures .preview:focus-visible { outline-color: var(--paper); }
   .door .small { font-size: 13px; opacity: .8; }
 
   /* The rule, drawn by the same code the tools use. */
   .rules { padding-block: clamp(56px, 10vh, 104px); }
-  .rules h2 { margin: 0 0 10px; font-size: 26px; font-weight: 800; color: var(--crimson); letter-spacing: -.01em; }
+  .rules .section-title { margin-bottom: 10px; }
   .rules > p { margin: 0 0 34px; max-width: 58ch; font-size: 15px; color: var(--muted); }
   .rule-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
   figure { margin: 0; }
-  figure svg { display: block; width: 100%; aspect-ratio: 1; background: var(--blush); border-radius: 16px; }
+  .rule-grid svg { display: block; width: 100%; aspect-ratio: 1; background: var(--blush); border-radius: 16px; }
   figcaption { margin-top: 14px; font-size: 14.5px; max-width: 30ch; }
   .minor { stroke: var(--rule); }
   .major { stroke: var(--rule-strong); }
   .cellline { fill: none; stroke: var(--oxblood); stroke-opacity: .55; stroke-dasharray: 3 3; }
+  .emerge .cellline { stroke-opacity: .32; }
 
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; gap: 28px; }
-    .doors { grid-template-columns: 1fr; }
+    .reading { grid-template-columns: 1fr; }
+    .doors { grid-template-columns: 1fr; grid-template-areas: "editor" "textures" "images"; }
+    .door.editor, .door.textures { flex-direction: column; }
+    .editor .preview, .textures .preview, .images .preview { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
     .rule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .foot { padding-left: 0; }
+    .topnav { justify-content: flex-start; }
+    .emerge-controls { grid-template-columns: 1fr 1fr; }
+    .emerge-controls input { grid-column: 1 / -1; grid-row: 1; }
+    .emerge-controls span:last-of-type { text-align: right; }
   }
 </style>
 </head>
 <body>
+
+<nav class="wrap topnav" aria-label="Ferramentas">
+  <a href="grid.html">Células</a>
+  <a href="texture.html">Texturas</a>
+  <a href="image.html">Imagens</a>
+</nav>
 
 <header class="wrap hero">
   <div class="lockup">
@@ -78,43 +131,69 @@
     <p class="name">Laboratório de Modelagem<br>da Informação</p>
     <p class="tagline">Arte · Arquitetura · Ambiente</p>
   </div>
-  <p class="intro">Três ferramentas para desenhar com a célula que constrói o logotipo LINA. Tudo o que você fizer segue a regra de cantos do próprio logotipo, por isso sempre pertence à família.</p>
+  <p class="intro">Três ferramentas para desenhar com a célula do logotipo. Tudo o que elas produzem segue a mesma regra.</p>
 </header>
 
-<main class="wrap">
-  <section class="doors" aria-label="Ferramentas">
-    <article class="door editor">
-      <div class="preview"><svg id="editorPreview" viewBox="0 0 32 20" aria-hidden="true"></svg></div>
-      <div class="body">
-        <h2>Editor de células</h2>
-        <p>Posicione e arraste células numa grade para desenhar letras, marcas e ícones. Cada mudança redesenha o contorno, e você pode exportá-lo como um SVG limpo.</p>
-        <a class="go" href="grid.html">Abrir o editor</a>
-      </div>
-    </article>
+<main>
+  <section class="wrap concept" aria-labelledby="conceptTitle">
+    <h2 class="foot" id="conceptTitle">O grupo é a propriedade que emerge</h2>
+    <p class="lead foot">A marca do LINA parte da ideia de sistema da Teoria Geral dos Sistemas, de Ludwig von Bertalanffy. Um conjunto de partes é apenas um agregado enquanto cada parte continua a ser o que era sozinha. Ele se torna um sistema quando, da relação entre as partes, surge uma propriedade que nenhuma delas tem isoladamente: uma propriedade partilhada.</p>
 
-    <article class="door textures">
-      <button class="preview" id="texturePreview" type="button" aria-label="Mostrar outra textura"></button>
-      <div class="body">
-        <h2>Gerador de texturas</h2>
-        <p>Padrões aleatórios com semente, feitos das mesmas células. Escolha o padrão, a semente e quanto espaço vazio ele deixa, depois exporte em SVG ou PNG.</p>
-        <a class="go" href="texture.html">Abrir o gerador</a>
-        <span class="small">Clique no padrão para ver outro.</span>
+    <figure class="emerge">
+      <svg id="emerge" aria-hidden="true"></svg>
+      <div class="emerge-controls">
+        <span aria-hidden="true">Agregado</span>
+        <input id="relation" type="range" min="0" max="1000" step="1" value="0" aria-label="Relação entre as células" aria-describedby="emergeCaption">
+        <span aria-hidden="true">Sistema</span>
       </div>
-    </article>
+      <div class="emerge-foot">
+        <figcaption id="emergeCaption">Arraste para aproximar ou afastar as células do logotipo.</figcaption>
+        <output id="emergeCount" for="relation"></output>
+      </div>
+    </figure>
 
-    <article class="door images">
-      <div class="preview"><svg id="imagePreview" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
-      <div class="body">
-        <h2>Filtro de imagem</h2>
-        <p>Transforme uma foto numa retícula de pontos, hastes ou células LINA, com o original ao lado. Sua imagem nunca sai do seu computador.</p>
-        <a class="go" href="image.html">Abrir o filtro</a>
-      </div>
-    </article>
+    <div class="reading foot">
+      <p>No logotipo, a parte é a célula: um quadrado do tamanho do pé do L. Sozinha, ela é um indivíduo, com os quatro cantos livres arredondados para fora. Quando encontra outra célula, os cantos que se tocam se curvam para dentro e as duas passam a ter um único contorno. Esse contorno não pertence a nenhuma delas. Ele pertence à relação.</p>
+      <p>Com a mesma célula e a mesma regra surgem as letras e, das letras, a palavra. O que emerge no fim é o próprio grupo: o LINA, um laboratório de pessoas que, em relação, produzem o que nenhuma produziria sozinha. As ferramentas abaixo seguem a mesma regra, então tudo o que elas desenham nasce assim, de células em relação.</p>
+    </div>
   </section>
 
-  <section class="rules">
-    <h2>A regra</h2>
-    <p>Toda forma aqui é uma união de células quadradas. Seu contorno é então arredondado por uma única regra, com raio de ¼ de célula, e nada mais. O filtro de imagem acrescenta uma exceção, o ponto de meia célula, que a mesma regra transforma em círculo.</p>
+  <section class="wrap" aria-labelledby="toolsTitle">
+    <h2 class="section-title foot" id="toolsTitle">Ferramentas</h2>
+    <div class="doors">
+      <article class="door editor">
+        <div class="preview"><svg id="editorPreview" viewBox="0 0 44 34" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
+        <div class="body">
+          <h3>Editor de células</h3>
+          <p>Posicione e arraste células numa grade para desenhar letras, marcas e ícones. Cada mudança redesenha o contorno, e você pode exportá-lo como um SVG limpo.</p>
+          <a class="go" href="grid.html">Abrir o editor</a>
+        </div>
+      </article>
+
+      <article class="door textures">
+        <button class="preview" id="texturePreview" type="button" aria-label="Mostrar outra textura"></button>
+        <div class="body">
+          <h3>Gerador de texturas</h3>
+          <p>Padrões aleatórios com semente, feitos das mesmas células. Escolha o padrão, a semente e quanto espaço vazio ele deixa, depois exporte em SVG ou PNG.</p>
+          <a class="go" href="texture.html">Abrir o gerador</a>
+          <span class="small">Clique no padrão para ver outro.</span>
+        </div>
+      </article>
+
+      <article class="door images">
+        <div class="preview"><svg id="imagePreview" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg></div>
+        <div class="body">
+          <h3>Filtro de imagem</h3>
+          <p>Transforme uma foto numa retícula de pontos, hastes ou células LINA, com o original ao lado. Sua imagem nunca sai do seu computador.</p>
+          <a class="go" href="image.html">Abrir o filtro</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap rules" aria-labelledby="rulesTitle">
+    <h2 class="section-title foot" id="rulesTitle">A regra</h2>
+    <p class="foot">Toda forma aqui é uma união de células quadradas. Seu contorno é então arredondado por uma única regra, com raio de ¼ de célula, e nada mais. O filtro de imagem acrescenta uma exceção, o ponto de meia célula, que a mesma regra transforma em círculo.</p>
     <div class="rule-grid">
       <figure>
         <svg id="ruleSteps" aria-hidden="true"></svg>
@@ -141,12 +220,85 @@
 <script src="lina-image.js"></script>
 <script src="lina-sample.js"></script>
 <script>
-const { outlinePath, wordmark, blocksToBitmap, LETTERS } = LinaGeometry;
+const { outlinePath, wordmark, blocksToBitmap, LETTERS, LETTER_GAP } = LinaGeometry;
 const CRIMSON = '#9B0A0E', OXBLOOD = '#520000';
 
 // Wordmark with the logo's true ¼-cell spacing; the A in oxblood.
 document.getElementById('wordmark').innerHTML = wordmark(0.5)
   .map(({ letter, d }) => `<path fill="${letter === 'A' ? OXBLOOD : CRIMSON}" d="${d}"/>`).join('');
+
+// Text columns start at the L's foot: 2 of the wordmark's 17.5 units.
+new ResizeObserver(([entry]) => {
+  document.documentElement.style.setProperty('--foot', (entry.contentRect.width * 2 / 17.5).toFixed(1) + 'px');
+}).observe(document.getElementById('wordmark'));
+
+// Emergence: the wordmark's cells, pushed out from its centre and snapped to the half-cell grid.
+// Quarter-cell units. Cells of one letter stay whole half cells apart and cells of different
+// letters never touch, so every step is a legal drawing. At full spread each cell stands alone.
+(function () {
+  const cells = [];
+  let x = 0;
+  for (const k of ['L', 'I', 'n', 'A']) {
+    for (const [bx, by, s] of LETTERS[k].blocks) cells.push({ x: (x + bx) * 2, y: by * 2, s: s * 2 });
+    x += LETTERS[k].w + LETTER_GAP;
+  }
+  const CX = x - LETTER_GAP, CY = 6, SPREAD = 3;
+  const layout = (k) => cells.map((c) => ({
+    s: c.s,
+    x: c.x + 2 * Math.round(((k - 1) * (c.x + c.s / 2 - CX)) / 2),
+    y: c.y + 2 * Math.round(((k - 1) * (c.y + c.s / 2 - CY)) / 2),
+  }));
+  const touch = (a, b) => a.x <= b.x + b.s && b.x <= a.x + a.s && a.y <= b.y + b.s && b.y <= a.y + a.s;
+  function shapes(list) {
+    const p = list.map((_, i) => i);
+    const root = (i) => (p[i] === i ? i : (p[i] = root(p[i])));
+    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) if (touch(list[i], list[j])) p[root(i)] = root(j);
+    return new Set(list.map((_, i) => root(i))).size;
+  }
+
+  const svg = document.getElementById('emerge');
+  const input = document.getElementById('relation');
+  const out = document.getElementById('emergeCount');
+  svg.setAttribute('viewBox', '-33 -10 103 32');
+  let last = '';
+  function draw() {
+    const list = layout(SPREAD - (SPREAD - 1) * (input.value / 1000));
+    const key = list.map((c) => c.x + ',' + c.y).join(';');
+    if (key === last) return;
+    last = key;
+    svg.innerHTML = `<path fill="${CRIMSON}" fill-rule="evenodd" d="${outlinePath(list, 1)}"/>` +
+      list.map((c) => `<rect class="cellline" x="${c.x}" y="${c.y}" width="${c.s}" height="${c.s}" vector-effect="non-scaling-stroke"/>`).join('');
+    const n = shapes(list);
+    const text = `${cells.length} células, ${n} ${n === 1 ? 'forma' : 'formas'}`;
+    out.value = text;
+    input.setAttribute('aria-valuetext', text);
+  }
+
+  // One orchestrated moment: the first time the figure is in view, the parts come together.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let frame = 0;
+  const stop = () => cancelAnimationFrame(frame);
+  input.value = reduce ? 1000 : 0;
+  draw();
+  input.addEventListener('input', () => { stop(); draw(); });
+  input.addEventListener('pointerdown', stop);
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+      const start = performance.now() + 500, D = 2600;
+      const step = (now) => {
+        const t = Math.min(1, Math.max(0, (now - start) / D));
+        const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(2 - 2 * t, 2) / 2;
+        input.value = Math.round(e * 1000);
+        draw();
+        if (t < 1) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    }, { threshold: 0.6 });
+    io.observe(svg);
+  }
+})();
 
 function gridLines(w, h) {
   let s = '';
@@ -156,13 +308,14 @@ function gridLines(w, h) {
 }
 
 // Editor door: the wordmark as cells on the grid, plus one cell being placed.
+// The grid is larger than the frame and centred, so any crop of the door keeps the word.
 (function () {
   const blocks = [['L', 0], ['I', 5], ['n', 8], ['A', 14]]
-    .flatMap(([k, dx]) => LETTERS[k].blocks.map(([x, y, s]) => ({ x: x + dx + 6, y: y + 7, s })));
+    .flatMap(([k, dx]) => LETTERS[k].blocks.map(([x, y, s]) => ({ x: x + dx + 12, y: y + 14, s })));
   document.getElementById('editorPreview').innerHTML =
-    gridLines(32, 20) +
+    gridLines(44, 34) +
     `<path fill="${CRIMSON}" fill-rule="evenodd" d="${outlinePath(blocks, 0.5)}"/>` +
-    `<rect x="27" y="7" width="2" height="2" fill="rgba(155,10,14,.16)"/>`;
+    `<rect x="32" y="14" width="2" height="2" fill="rgba(155,10,14,.16)"/>`;
 })();
 
 // Rule diagrams: grid, the rounded union, and the cells that made it.

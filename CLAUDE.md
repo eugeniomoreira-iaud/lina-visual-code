@@ -19,7 +19,7 @@ If a change would produce a solid thinner than a cell (outside the exceptions), 
 - `lina-texture.js` + `texture.html`: seeded random patterns (scatter, field, stems, glyphs). Ink pixels carry their shape's alignment class so placement can enforce the half-cell rule for connected pieces.
 - `lina-image.js` + `image.html`: photo to halftone / stems / bitmap. Squares only in halftone, in half-cell sizes, on a screen of 2 to 10 cells; tone-gated merging in the darks. No diagonal bridges: they were tried and dropped. `lina-sample.js` is the embedded sample portrait.
 - `grid.html`: the cell editor.
-- `index.html` + `lina.css`: landing page and shared chrome.
+- `index.html` + `lina.css`: landing page and shared chrome. The landing page carries the brand concept (a system is parts whose relation makes a shared property emerge; the group is that property), shown by a slider that brings the wordmark's cells from aggregate to system.
 - `png/`, `references/`: brand assets and visual references. Read-only. `references/` is git-ignored.
 
 Plain HTML, CSS and JS. No build step, no dependencies. Pages must also work when opened from Finder (that is why the sample photo is embedded). The repo is public at `github.com/eugeniomoreira-iaud/lina-visual-code`, and GitHub Pages serves `main` from the root (`.nojekyll`, so files are served as they are). A push to `main` is a release: the team uses the site. The interface and the README are in Brazilian Portuguese, so write new UI text in pt-BR; code, identifiers, URL keys, comments and this file stay in English. Units in code: 1 unit = ¼ cell in the engines and the editor; `lina-geometry.js` is unit-agnostic (the letter tables in it are in half cells).
